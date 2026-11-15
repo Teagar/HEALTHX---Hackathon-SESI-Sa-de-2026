@@ -1,0 +1,7 @@
+sesilita.teagar.com.br {
+    import common
+    request_body {
+        max_size 30MB
+    }
+    reverse_proxy sesilita-app:3001
+}

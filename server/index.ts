@@ -90,7 +90,7 @@ app.get('/api/health', (_req, res) => {
   const db = loadDatabase();
   res.json({
     ok: true,
-    service: 'HealthX SESI Saúde Acolhe API',
+    service: 'SESILITA API · SESI Saúde Acolhe',
     version: db.version,
     lastUpdatedAt: db.lastUpdatedAt,
     employeesCount: db.employees.length,
@@ -230,10 +230,30 @@ app.post('/api/admin/reset-demo', (_req, res) => {
   res.json(buildFullStatePayload());
 });
 
+// Produção: serve o build estático (dist/) e devolve o index.html nas rotas do app (/home, /admin, /gestor).
+const DIST_DIR = path.resolve(process.cwd(), 'dist');
+if (fs.existsSync(path.join(DIST_DIR, 'index.html'))) {
+  app.use(
+    express.static(DIST_DIR, {
+      index: false,
+      setHeaders: (res, filePath) => {
+        // Arquivos com hash no nome podem ficar em cache; o resto é revalidado.
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    })
+  );
+  app.get(/^\/(?!api(\/|$)).*/, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
+
 app.listen(PORT, () => {
   const db = loadDatabase();
   syncCsvOnDisk(db.employees);
   console.log(
-    `[HealthX API Server] Rodando em http://localhost:${PORT} (${db.employees.length} registros carregados)`
+    `[SESILITA API] Rodando em http://localhost:${PORT} (${db.employees.length} registros carregados)`
   );
 });

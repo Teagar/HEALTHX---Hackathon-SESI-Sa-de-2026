@@ -91,7 +91,7 @@ const isDirectExecution =
 if (isDirectExecution) {
   const result = runActiveSearchBot('CLI_SCRIPT');
   console.log('===============================================================');
-  console.log('[HealthX Bot Busca Ativa] Varredura Preventiva Concluída');
+  console.log('[SESILITA Bot Busca Ativa] Varredura Preventiva Concluída');
   console.log(`• Resumo: ${result.logEntry.summaryMessage}`);
   console.log(`• Passes de Cuidado Disparados neste Ciclo: ${result.dispatchedCount}`);
   console.log('===============================================================');

@@ -64,7 +64,7 @@ export function LandingPortal({
   companiesCount,
 }: LandingPortalProps) {
   return (
-    <div className="min-h-screen w-full overflow-y-auto bg-[#E2DDD3] text-[#1E2926]">
+    <div className="min-h-[calc(100vh/var(--ui-zoom))] w-full overflow-y-auto bg-[#E2DDD3] text-[#1E2926]">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14">
         <header className="flex flex-col items-start gap-3">
           <div className="flex items-center gap-3">
@@ -72,9 +72,9 @@ export function LandingPortal({
               <Stethoscope className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">SESI Saúde Acolhe</h1>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">SESILITA</h1>
               <p className="text-[12px] text-[#5A6561]">
-                Coordenação do Cuidado na Atenção Primária Corporativa
+                Coordenação do Cuidado do SESI Saúde Acolhe · Atenção Primária Corporativa
               </p>
             </div>
           </div>

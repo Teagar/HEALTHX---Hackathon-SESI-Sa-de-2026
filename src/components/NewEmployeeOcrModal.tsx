@@ -16,6 +16,8 @@ import {
   UserCheck,
   UserPlus,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import type { Employee } from '../types';
 import { COMPANY_METADATA } from '../mockDatabase';
@@ -53,7 +55,7 @@ const SAMPLE_COMPLETE_REGISTRATION_TEXT = [
   'GESTÃO DO CUIDADO - FICHA DE CADASTRO E ACOLHIMENTO APS SESI',
   'Data Ficha: 15/11/2026',
   'Status: ATIVO',
-  'Data de inclusão ao Programa Bem Cuidar',
+  'Data de inclusão ao Programa SESI Saúde Acolhe',
   'Informe a Data de Ativação da vida no Programa: 05/10/2026',
   '1. Identificação Cadastral do Trabalhador',
   'Funcionário (Código / Nome): 20269875 - MARIANA SILVA SOUZA',
@@ -75,6 +77,32 @@ const SAMPLE_COMPLETE_REGISTRATION_TEXT = [
 
 /** Exemplo digitado (não é um arquivo de public/demo): rotulado como texto, nunca como PDF. */
 const SAMPLE_REGISTRATION_NAME = 'Exemplo: ficha de cadastro (texto colado)';
+
+/** Classe comum dos controles do formulário de conferência. */
+const FIELD_CONTROL_CLASS =
+  'w-full rounded-md border border-[#DCD7CC] bg-white px-2 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none';
+
+/** Campos que ocupam a linha inteira na grade de 2 colunas. */
+const WIDE_FIELD_KEYS = new Set<ColKey>(['nome', 'empresa', 'demandas', 'historico', 'statusPlano']);
+
+/** Agrupamento dos campos cadastrais (colunas 1 a 11). */
+const REGISTRATION_GROUPS: { title: string; keys: ColKey[]; withExtra?: boolean }[] = [
+  { title: 'Identificação', keys: ['nome', 'matricula', 'status'] },
+  { title: 'Dados pessoais', keys: ['nascimento', 'idade', 'sexo', 'cpf', 'telefone'] },
+  { title: 'Vínculo no programa', keys: ['empresa', 'medico', 'entradaAps'], withExtra: true },
+];
+
+/** Agrupamento dos campos de coordenação do cuidado (colunas 12 a 32). */
+const COORDINATION_GROUPS: { title: string; keys: ColKey[] }[] = [
+  { title: 'Classificação de risco', keys: ['riscoInicial', 'riscoAtual'] },
+  { title: 'Consultas e equipe', keys: ['ultMedica', 'multi', 'ultNutri', 'ultPsico'] },
+  { title: 'Retorno e coordenação', keys: ['previsaoRetorno', 'retornoRisco', 'coordData', 'coordProxima'] },
+  { title: 'Plano de cuidado', keys: ['envioPlano', 'verificarAdesao', 'statusPlano'] },
+  {
+    title: 'Demandas e contatos',
+    keys: ['demandas', 'historico', 'contJul', 'contAgo', 'contSet', 'contOut', 'contNov', 'contDez'],
+  },
+];
 
 function escapeHtml(raw: string): string {
   return raw
@@ -120,6 +148,8 @@ export function NewEmployeeOcrModal({
   const [queue, setQueue] = useState<ImportQueueItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [docTab, setDocTab] = useState<'rendered' | 'raw'>('rendered');
+  /** Zoom da imagem original: 1 = largura da coluna. */
+  const [previewZoom, setPreviewZoom] = useState<number>(1);
   const [activeFieldKey, setActiveFieldKey] = useState<ColKey | null>(null);
   const [isLoadingFiles, setIsLoadingFiles] = useState<boolean>(false);
   const [statusBanner, setStatusBanner] = useState<string>('');
@@ -162,6 +192,26 @@ export function NewEmployeeOcrModal({
   }, [isOpen, employees, queue.length]);
 
   const currentItem = queue[currentIndex] ?? null;
+
+  // Esc fecha o modal (exceto quando a caixa de colar texto está aberta, onde Esc a fecha primeiro).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (showPasteBox) {
+        setShowPasteBox(false);
+        return;
+      }
+      onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose, showPasteBox]);
+
+  // Cada documento abre ajustado à largura da coluna.
+  useEffect(() => {
+    setPreviewZoom(1);
+  }, [currentItem?.id]);
 
   const stats = useMemo(() => {
     const total = queue.length;
@@ -229,7 +279,7 @@ export function NewEmployeeOcrModal({
     const filesToLoad =
       selectedDemoFile === 'all' ? SECILITA_DEMO_FILES : [selectedDemoFile];
     setStatusBanner(
-      `Carregando ${filesToLoad.length} anexo(s) de demonstração do secilita_planilhas...`
+      `Carregando ${filesToLoad.length} documento(s) de exemplo...`
     );
     try {
       const docs = await loadDemoFilesFromPublic(filesToLoad);
@@ -483,6 +533,128 @@ export function NewEmployeeOcrModal({
   const coordinationFields =
     currentItem?.fields.filter((f) => !REGISTRATION_COL_KEYS.includes(f.key)) ?? [];
 
+  const fieldStats = {
+    new: currentItem?.fields.filter((f) => f.state === 'new').length ?? 0,
+    changed: currentItem?.fields.filter((f) => f.state === 'changed').length ?? 0,
+    same: currentItem?.fields.filter((f) => f.state === 'same').length ?? 0,
+  };
+
+  /** Campos do item atual na ordem do grupo (os que o documento não trouxe ficam de fora). */
+  const fieldsOf = (keys: readonly ColKey[]): FieldDiffRow[] =>
+    keys
+      .map((k) => currentItem?.fields.find((f) => f.key === k))
+      .filter((f): f is FieldDiffRow => Boolean(f));
+
+  const renderFieldCell = (field: FieldDiffRow) => {
+    const isFocused = activeFieldKey === field.key;
+    const opts = ALLOWED[field.key];
+    const wide = WIDE_FIELD_KEYS.has(field.key) || field.key.startsWith('cont');
+    const isLongText = field.key === 'demandas' || field.key === 'historico' || field.key.startsWith('cont');
+    const onChangeValue = (value: string) => handleFieldChange(field.key, value);
+    const focus = () => setActiveFieldKey(field.key);
+    const label = field.label || LABEL[field.key];
+
+    let control: JSX.Element;
+    if (opts) {
+      control = (
+        <select value={field.value} onFocus={focus} onChange={(e) => onChangeValue(e.target.value)} className={FIELD_CONTROL_CLASS}>
+          <option value="">(vazio)</option>
+          {opts.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      );
+    } else if (field.key === 'empresa') {
+      control = (
+        <select value={field.value} onFocus={focus} onChange={(e) => onChangeValue(e.target.value)} className={FIELD_CONTROL_CLASS}>
+          {Object.keys(COMPANY_METADATA).map((comp) => (
+            <option key={comp} value={comp}>
+              {comp}
+            </option>
+          ))}
+          {!COMPANY_METADATA[field.value] && field.value && <option value={field.value}>{field.value}</option>}
+        </select>
+      );
+    } else if (field.key === 'medico') {
+      control = (
+        <select value={field.value} onFocus={focus} onChange={(e) => onChangeValue(e.target.value)} className={FIELD_CONTROL_CLASS}>
+          {REFERENCE_DOCTORS.map((docName) => (
+            <option key={docName} value={docName}>
+              {docName}
+            </option>
+          ))}
+          {!REFERENCE_DOCTORS.includes(field.value as (typeof REFERENCE_DOCTORS)[number]) && field.value && (
+            <option value={field.value}>{field.value}</option>
+          )}
+        </select>
+      );
+    } else if (isLongText) {
+      control = (
+        <textarea rows={2} value={field.value} onFocus={focus} onChange={(e) => onChangeValue(e.target.value)} className={FIELD_CONTROL_CLASS} />
+      );
+    } else {
+      control = (
+        <input type="text" value={field.value} onFocus={focus} onChange={(e) => onChangeValue(e.target.value)} className={FIELD_CONTROL_CLASS} />
+      );
+    }
+
+    return (
+      <div
+        key={field.key}
+        onClick={focus}
+        className={`min-w-0 rounded-lg border p-2 transition-all ${wide ? 'col-span-2' : ''} ${
+          isFocused
+            ? 'border-[#1F564C] bg-white ring-2 ring-[#1F564C]/15'
+            : field.state === 'changed'
+            ? 'border-[#F5DFB8] bg-[#FFFDF8]'
+            : 'border-[#E5E0D5] bg-white'
+        }`}
+      >
+        <div className="mb-1 flex items-center justify-between gap-1.5">
+          <span className="truncate text-[11px] font-bold text-[#1E2926]" title={label}>
+            {label}
+          </span>
+          <span
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
+              field.state === 'new'
+                ? 'bg-[#EEF6F3] text-[#1F564C]'
+                : field.state === 'changed'
+                ? 'bg-[#FDF7EC] text-[#C26D27]'
+                : 'bg-[#F1F5F9] text-[#64748B]'
+            }`}
+          >
+            {field.state === 'new' ? 'Novo' : field.state === 'changed' ? 'Muda' : 'Igual'}
+          </span>
+        </div>
+
+        {control}
+
+        {field.current && field.proposed !== field.current && (
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-[#5A6561]">
+            <span className="min-w-0 truncate" title={field.current}>
+              Antes: <s>{field.current}</s>
+            </span>
+            <button
+              type="button"
+              onClick={() => handleToggleFieldRestore(field.key)}
+              className="shrink-0 font-semibold text-[#1F564C] hover:underline"
+            >
+              {field.value === field.current ? 'Usar o do documento' : 'Manter o que estava'}
+            </button>
+          </div>
+        )}
+
+        {isFocused && field.evidence && (
+          <p className="mt-1.5 rounded bg-[#FEFCE8] px-1.5 py-1 text-[10px] leading-snug text-[#5A6561]">
+            <span className="font-semibold text-[#A16207]">Trecho do documento:</span> “{field.evidence}”
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const filteredSwapEmployees = employees
     .filter((e) => {
       if (!personSearch.trim()) return true;
@@ -502,9 +674,10 @@ export function NewEmployeeOcrModal({
       aria-modal="true"
       aria-labelledby="secilita-ocr-title"
     >
-      <div className="flex h-[94vh] w-full max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
+      <div className="flex h-[calc(94vh/var(--ui-zoom))] w-full max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
         {/* Cabeçalho Superior do Workspace de Importação e OCR */}
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#DED9CE] bg-white px-4 py-2.5">
+        <header className="flex shrink-0 items-start gap-3 border-b border-[#DED9CE] bg-white py-2.5 pl-4 pr-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F564C] text-white">
               <FileScan className="h-4 w-4" aria-hidden="true" />
@@ -518,7 +691,7 @@ export function NewEmployeeOcrModal({
                   Importar Documentos e Cadastrar Ficha (Leitor Interativo em 3 Colunas)
                 </h2>
                 <span className="rounded-full bg-[#EEF6F3] px-2.5 py-0.5 text-[10px] font-bold text-[#1F564C]">
-                  Motor secilita_planilhas • 32 Colunas SESI
+                  Motor SESILITA • 32 Colunas SESI
                 </span>
               </div>
               <p className="text-[11px] text-[#5A6561]">
@@ -533,10 +706,10 @@ export function NewEmployeeOcrModal({
               <select
                 value={selectedDemoFile}
                 onChange={(e) => setSelectedDemoFile(e.target.value)}
-                aria-label="Selecionar anexo de teste do secilita_planilhas"
+                aria-label="Selecionar documento de exemplo"
                 className="rounded-l-md bg-transparent px-2 py-1 text-[11px] font-medium text-[#1E2926] focus:outline-none"
               >
-                <option value="all">Todos os 14 anexos de teste (secilita_planilhas)</option>
+                <option value="all">Todos os 14 documentos de exemplo</option>
                 {SECILITA_DEMO_FILES.map((fn) => (
                   <option key={fn} value={fn}>
                     {fn}
@@ -562,16 +735,23 @@ export function NewEmployeeOcrModal({
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               <span>+ Ficha de Cadastro Completa</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#5A6561] hover:border-[#1E2926] hover:text-[#1E2926]"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Fechar</span>
-            </button>
           </div>
+          </div>
+
+          {/* Fechar: sempre no canto superior direito (também fecha com Esc) */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar importação de documentos"
+            title="Fechar (Esc)"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#DCD7CC] bg-white py-1.5 pl-2.5 pr-3 text-[12px] font-semibold text-[#1E2926] shadow-sm transition-colors hover:border-[#C84B31] hover:bg-[#FDF2F0] hover:text-[#C84B31] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F564C]/40"
+          >
+            <X className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+            <span>Fechar</span>
+            <kbd className="ml-0.5 rounded border border-[#DCD7CC] bg-[#F5F3EE] px-1 font-mono text-[10px] font-medium text-[#5A6561] group-hover:border-[#F5C6BC] group-hover:bg-white group-hover:text-[#C84B31]">
+              Esc
+            </kbd>
+          </button>
         </header>
 
         {statusBanner && (
@@ -877,18 +1057,55 @@ export function NewEmployeeOcrModal({
                     <div className="space-y-4">
                       {/* 1. Preview Visual de Imagem / Foto / PDF Escaneado */}
                       {currentItem.doc.previewImageUrl && (
-                        <div className="overflow-hidden rounded-xl border border-[#D8D1C5] bg-white p-3 shadow-sm">
-                          <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-[#5A6561]">
-                            <span>Imagem Original do Documento ({currentItem.doc.name})</span>
-                            <span className="rounded bg-[#FDF7EC] px-2 py-0.5 text-[10px] font-bold text-[#C26D27]">
-                              {currentItem.doc.method}
+                        <div className="rounded-xl border border-[#D8D1C5] bg-white p-3 shadow-sm">
+                          <div className="mb-2 flex items-center justify-between gap-2 text-[12px] font-semibold text-[#5A6561]">
+                            <span className="min-w-0 truncate">
+                              Imagem Original do Documento ({currentItem.doc.name})
                             </span>
+                            <div className="flex shrink-0 items-center gap-1">
+                              <span className="mr-1 rounded bg-[#FDF7EC] px-2 py-0.5 text-[10.5px] font-bold text-[#C26D27]">
+                                {currentItem.doc.method}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewZoom((z) => Math.max(1, +(z - 0.25).toFixed(2)))}
+                                disabled={previewZoom <= 1}
+                                className="rounded-md border border-[#D8D1C5] p-1 text-[#1E2926] hover:bg-[#F5F3EE] disabled:opacity-40"
+                                aria-label="Diminuir zoom da imagem"
+                                title="Diminuir zoom"
+                              >
+                                <ZoomOut className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewZoom(1)}
+                                className="min-w-[52px] rounded-md border border-[#D8D1C5] px-1.5 py-0.5 text-[11px] font-bold text-[#1E2926] hover:bg-[#F5F3EE]"
+                                title="Ajustar à largura da coluna"
+                              >
+                                {Math.round(previewZoom * 100)}%
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewZoom((z) => Math.min(3, +(z + 0.25).toFixed(2)))}
+                                disabled={previewZoom >= 3}
+                                className="rounded-md border border-[#D8D1C5] p-1 text-[#1E2926] hover:bg-[#F5F3EE] disabled:opacity-40"
+                                aria-label="Aumentar zoom da imagem"
+                                title="Aumentar zoom"
+                              >
+                                <ZoomIn className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
-                          <img
-                            src={currentItem.doc.previewImageUrl}
-                            alt={currentItem.doc.name}
-                            className="mx-auto max-h-[380px] w-auto rounded-lg border border-[#EFECE6] object-contain"
-                          />
+                          <div className="max-h-[calc(78vh/var(--ui-zoom))] overflow-auto rounded-lg border border-[#EFECE6] bg-[#F5F3EE]">
+                            <img
+                              src={currentItem.doc.previewImageUrl}
+                              alt={currentItem.doc.name}
+                              style={{ width: `${previewZoom * 100}%`, maxWidth: 'none' }}
+                              className="block h-auto cursor-zoom-in"
+                              onClick={() => setPreviewZoom((z) => (z >= 3 ? 1 : Math.min(3, z + 0.5)))}
+                              title="Clique para ampliar"
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -1106,339 +1323,153 @@ export function NewEmployeeOcrModal({
                   )}
                 </div>
 
-                {/* Lista Editável de Campos Extraídos do Documento */}
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3.5">
+                {/* Lista Editável de Campos Extraídos do Documento (agrupada, em 2 colunas) */}
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  {/* Resumo do que o documento muda na planilha */}
+                  <div className="flex flex-wrap items-center gap-1.5 border-b border-[#EFECE6] px-3.5 py-2 text-[10.5px] text-[#5A6561]">
+                    <span className="font-semibold text-[#1E2926]">
+                      {currentItem.fields.length} campos lidos:
+                    </span>
+                    <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 font-bold text-[#1F564C]">
+                      {fieldStats.new} novos
+                    </span>
+                    {fieldStats.changed > 0 && (
+                      <span className="rounded bg-[#FDF7EC] px-1.5 py-0.5 font-bold text-[#C26D27]">
+                        {fieldStats.changed} mudam
+                      </span>
+                    )}
+                    {fieldStats.same > 0 && (
+                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-bold text-[#64748B]">
+                        {fieldStats.same} iguais
+                      </span>
+                    )}
+                    <span className="ml-auto hidden text-[10px] xl:inline">
+                      Clique num campo para ver o trecho no documento
+                    </span>
+                  </div>
+
                   {/* Bloco 1: Campos Cadastrais / Não-Médicos do Funcionário */}
-                  {registrationFields.length > 0 && (
-                    <div className="rounded-xl border border-[#DED9CE] bg-[#FAF9F6] p-3">
-                      <div className="mb-2.5 flex items-center justify-between border-b border-[#E5E0D5] pb-1.5">
+                  {(registrationFields.length > 0 || currentItem.isNewEmployeeMode) && (
+                    <section className="border-b border-[#EFECE6]">
+                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EFECE6] bg-white/95 px-3.5 py-2 backdrop-blur">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
                           <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                          1. Dados Cadastrais do Funcionário (Colunas 1 a 11)
+                          1. Dados cadastrais
                         </span>
                         <span className="text-[10px] font-semibold text-[#5A6561]">
-                          {registrationFields.length} campos
+                          Colunas 1 a 11 · {registrationFields.length} campos
                         </span>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {registrationFields.map((field) => {
-                          const isFocused = activeFieldKey === field.key;
-                          const opts = ALLOWED[field.key];
-                          const isCompany = field.key === 'empresa';
-                          const isDoctor = field.key === 'medico';
-
+                      </h4>
+                      <div className="space-y-3 px-3.5 py-3">
+                        {REGISTRATION_GROUPS.map((group) => {
+                          const groupFields = fieldsOf(group.keys);
+                          const showExtra = group.withExtra && currentItem.isNewEmployeeMode;
+                          if (!groupFields.length && !showExtra) return null;
                           return (
-                            <div
-                              key={field.key}
-                              onClick={() => setActiveFieldKey(field.key)}
-                              className={`rounded-lg border p-2.5 transition-all ${
-                                isFocused
-                                  ? 'border-[#1F564C] bg-white ring-2 ring-[#1F564C]/15'
-                                  : 'border-[#E5E0D5] bg-white'
-                              }`}
-                            >
-                              <div className="mb-1 flex items-center justify-between gap-2">
-                                <span className="text-[11px] font-bold text-[#1E2926]">
-                                  {field.label}
-                                </span>
-                                <span
-                                  className={`rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
-                                    field.state === 'new'
-                                      ? 'bg-[#EEF6F3] text-[#1F564C]'
-                                      : field.state === 'changed'
-                                      ? 'bg-[#FDF7EC] text-[#C26D27]'
-                                      : 'bg-[#F1F5F9] text-[#64748B]'
-                                  }`}
-                                >
-                                  {field.state === 'new'
-                                    ? 'Novo'
-                                    : field.state === 'changed'
-                                    ? 'Muda'
-                                    : 'Igual'}
-                                </span>
+                            <fieldset key={group.title}>
+                              <legend className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5A6561]">
+                                {group.title}
+                              </legend>
+                              <div className="grid grid-cols-2 items-start gap-2">
+                                {groupFields.map(renderFieldCell)}
+                                {showExtra && (
+                                  <>
+                                    <label className="col-span-2 rounded-lg border border-[#E5E0D5] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                        Setor industrial
+                                      </span>
+                                      <input
+                                        type="text"
+                                        value={currentItem.extraRegistration.sector}
+                                        onChange={(e) =>
+                                          updateCurrentItem((it) => ({
+                                            ...it,
+                                            extraRegistration: { ...it.extraRegistration, sector: e.target.value },
+                                          }))
+                                        }
+                                        className={FIELD_CONTROL_CLASS}
+                                      />
+                                    </label>
+                                    <label className="rounded-lg border border-[#E5E0D5] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                        Cargo / função
+                                      </span>
+                                      <input
+                                        type="text"
+                                        value={currentItem.extraRegistration.role}
+                                        onChange={(e) =>
+                                          updateCurrentItem((it) => ({
+                                            ...it,
+                                            extraRegistration: { ...it.extraRegistration, role: e.target.value },
+                                          }))
+                                        }
+                                        className={FIELD_CONTROL_CLASS}
+                                      />
+                                    </label>
+                                    <label className="rounded-lg border border-[#E5E0D5] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                        Turno
+                                      </span>
+                                      <select
+                                        value={currentItem.extraRegistration.shift}
+                                        onChange={(e) =>
+                                          updateCurrentItem((it) => ({
+                                            ...it,
+                                            extraRegistration: {
+                                              ...it.extraRegistration,
+                                              shift: e.target.value as ImportQueueItem['extraRegistration']['shift'],
+                                            },
+                                          }))
+                                        }
+                                        className={FIELD_CONTROL_CLASS}
+                                      >
+                                        <option value="1º Turno (06h–14h)">1º Turno (06h–14h)</option>
+                                        <option value="2º Turno (14h–22h)">2º Turno (14h–22h)</option>
+                                        <option value="Administrativo (08h–17h)">Administrativo (08h–17h)</option>
+                                      </select>
+                                    </label>
+                                  </>
+                                )}
                               </div>
-
-                              {opts ? (
-                                <select
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                >
-                                  <option value="">(vazio)</option>
-                                  {opts.map((o) => (
-                                    <option key={o} value={o}>
-                                      {o}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : isCompany ? (
-                                <select
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                >
-                                  {Object.keys(COMPANY_METADATA).map((comp) => (
-                                    <option key={comp} value={comp}>
-                                      {comp}
-                                    </option>
-                                  ))}
-                                  {!COMPANY_METADATA[field.value] && field.value && (
-                                    <option value={field.value}>{field.value}</option>
-                                  )}
-                                </select>
-                              ) : isDoctor ? (
-                                <select
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                >
-                                  {REFERENCE_DOCTORS.map((docName) => (
-                                    <option key={docName} value={docName}>
-                                      {docName}
-                                    </option>
-                                  ))}
-                                  {!REFERENCE_DOCTORS.includes(
-                                    field.value as (typeof REFERENCE_DOCTORS)[number]
-                                  ) &&
-                                    field.value && (
-                                      <option value={field.value}>{field.value}</option>
-                                    )}
-                                </select>
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                />
-                              )}
-
-                              {field.current && field.proposed !== field.current && (
-                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#5A6561]">
-                                  <span>
-                                    Antes: <s>{field.current}</s>
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleFieldRestore(field.key)}
-                                    className="font-semibold text-[#1F564C] hover:underline"
-                                  >
-                                    {field.value === field.current
-                                      ? 'Usar o do documento'
-                                      : 'Manter o que estava'}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            </fieldset>
                           );
                         })}
-
-                        {/* Campos Operacionais de Turno/Cargo/Setor para Novo Cadastro */}
-                        {currentItem.isNewEmployeeMode && (
-                          <div className="grid grid-cols-1 gap-2 rounded-lg border border-[#E5E0D5] bg-white p-2.5 sm:grid-cols-3">
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#5A6561]">
-                                Setor Industrial
-                              </label>
-                              <input
-                                type="text"
-                                value={currentItem.extraRegistration.sector}
-                                onChange={(e) =>
-                                  updateCurrentItem((it) => ({
-                                    ...it,
-                                    extraRegistration: {
-                                      ...it.extraRegistration,
-                                      sector: e.target.value,
-                                    },
-                                  }))
-                                }
-                                className="mt-0.5 w-full rounded border border-[#DCD7CC] px-2 py-1 text-[11px]"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#5A6561]">
-                                Cargo / Função
-                              </label>
-                              <input
-                                type="text"
-                                value={currentItem.extraRegistration.role}
-                                onChange={(e) =>
-                                  updateCurrentItem((it) => ({
-                                    ...it,
-                                    extraRegistration: {
-                                      ...it.extraRegistration,
-                                      role: e.target.value,
-                                    },
-                                  }))
-                                }
-                                className="mt-0.5 w-full rounded border border-[#DCD7CC] px-2 py-1 text-[11px]"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#5A6561]">
-                                Turno
-                              </label>
-                              <select
-                                value={currentItem.extraRegistration.shift}
-                                onChange={(e) =>
-                                  updateCurrentItem((it) => ({
-                                    ...it,
-                                    extraRegistration: {
-                                      ...it.extraRegistration,
-                                      shift: e.target
-                                        .value as ImportQueueItem['extraRegistration']['shift'],
-                                    },
-                                  }))
-                                }
-                                className="mt-0.5 w-full rounded border border-[#DCD7CC] px-2 py-1 text-[11px]"
-                              >
-                                <option value="1º Turno (06h–14h)">1º Turno (06h–14h)</option>
-                                <option value="2º Turno (14h–22h)">2º Turno (14h–22h)</option>
-                                <option value="Administrativo (08h–17h)">
-                                  Administrativo (08h–17h)
-                                </option>
-                              </select>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
+                    </section>
                   )}
 
                   {/* Bloco 2: Campos de Coordenação do Cuidado da Planilha SESI */}
                   {coordinationFields.length > 0 && (
-                    <div className="rounded-xl border border-[#DED9CE] bg-[#FAF9F6] p-3">
-                      <div className="mb-2.5 flex items-center justify-between border-b border-[#E5E0D5] pb-1.5">
+                    <section className="border-b border-[#EFECE6]">
+                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EFECE6] bg-white/95 px-3.5 py-2 backdrop-blur">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
                           <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          2. Coordenação do Cuidado na Planilha (Colunas 12 a 32)
+                          2. Coordenação do cuidado
                         </span>
                         <span className="text-[10px] font-semibold text-[#5A6561]">
-                          {coordinationFields.length} campos
+                          Colunas 12 a 32 · {coordinationFields.length} campos
                         </span>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {coordinationFields.map((field) => {
-                          const isFocused = activeFieldKey === field.key;
-                          const opts = ALLOWED[field.key];
-                          const isLongText =
-                            field.key === 'demandas' ||
-                            field.key === 'historico' ||
-                            field.key.startsWith('cont');
-
+                      </h4>
+                      <div className="space-y-3 px-3.5 py-3">
+                        {COORDINATION_GROUPS.map((group) => {
+                          const groupFields = fieldsOf(group.keys);
+                          if (!groupFields.length) return null;
                           return (
-                            <div
-                              key={field.key}
-                              onClick={() => setActiveFieldKey(field.key)}
-                              className={`rounded-lg border p-2.5 transition-all ${
-                                isFocused
-                                  ? 'border-[#1F564C] bg-white ring-2 ring-[#1F564C]/15'
-                                  : 'border-[#E5E0D5] bg-white'
-                              }`}
-                            >
-                              <div className="mb-1 flex items-center justify-between gap-2">
-                                <span className="text-[11px] font-bold text-[#1E2926]">
-                                  {field.label || LABEL[field.key]}
-                                </span>
-                                <span
-                                  className={`rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
-                                    field.state === 'new'
-                                      ? 'bg-[#EEF6F3] text-[#1F564C]'
-                                      : field.state === 'changed'
-                                      ? 'bg-[#FDF7EC] text-[#C26D27]'
-                                      : 'bg-[#F1F5F9] text-[#64748B]'
-                                  }`}
-                                >
-                                  {field.state === 'new'
-                                    ? 'Novo'
-                                    : field.state === 'changed'
-                                    ? 'Muda'
-                                    : 'Igual'}
-                                </span>
-                              </div>
-
-                              {opts ? (
-                                <select
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                >
-                                  <option value="">(vazio)</option>
-                                  {opts.map((o) => (
-                                    <option key={o} value={o}>
-                                      {o}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : isLongText ? (
-                                <textarea
-                                  rows={2}
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                />
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={field.value}
-                                  onFocus={() => setActiveFieldKey(field.key)}
-                                  onChange={(e) =>
-                                    handleFieldChange(field.key, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
-                                />
-                              )}
-
-                              {field.current && field.proposed !== field.current && (
-                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#5A6561]">
-                                  <span className="truncate">
-                                    Antes: <s>{field.current}</s>
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleFieldRestore(field.key)}
-                                    className="shrink-0 font-semibold text-[#1F564C] hover:underline"
-                                  >
-                                    {field.value === field.current
-                                      ? 'Usar o do documento'
-                                      : 'Manter o que estava'}
-                                  </button>
-                                </div>
-                              )}
-
-                              <p className="mt-1 truncate text-[10px] text-[#5A6561]">
-                                Trecho: “{field.evidence}”
-                              </p>
-                            </div>
+                            <fieldset key={group.title}>
+                              <legend className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5A6561]">
+                                {group.title}
+                              </legend>
+                              <div className="grid grid-cols-2 items-start gap-2">{groupFields.map(renderFieldCell)}</div>
+                            </fieldset>
                           );
                         })}
                       </div>
-                    </div>
+                    </section>
                   )}
 
                   {/* Seções Clínicas Lidas no Documento que Ficam Só no Prontuário (Fora da Planilha) */}
                   {currentItem.extraction.ignored.length > 0 && (
-                    <details className="rounded-xl border border-[#DCD7CC] bg-[#FAF9F6] p-3 text-[11px] text-[#5A6561]">
+                    <details className="m-3.5 rounded-xl border border-[#DCD7CC] bg-[#FAF9F6] p-3 text-[11px] text-[#5A6561]">
                       <summary className="cursor-pointer font-bold text-[#1E2926]">
                         No documento, mas restrito ao prontuário ({currentItem.extraction.ignored.length})
                       </summary>

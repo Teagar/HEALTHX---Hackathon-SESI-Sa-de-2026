@@ -611,7 +611,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#F5F3EE] text-[#1E2926]">
+    <div className="flex h-[calc(100vh/var(--ui-zoom))] w-full flex-col overflow-hidden bg-[#F5F3EE] text-[#1E2926]">
       <TopBar
         employees={employees}
         currentRoute={currentRoute}
@@ -680,7 +680,7 @@ export function App() {
       )}
 
       <div
-        className="pointer-events-none fixed bottom-3 right-3 z-50 flex w-[min(92vw,360px)] flex-col gap-2"
+        className="pointer-events-none fixed bottom-3 right-3 z-50 flex w-[min(calc(92vw/var(--ui-zoom)),360px)] flex-col gap-2"
         aria-live="polite"
         aria-atomic="false"
       >

@@ -65,7 +65,7 @@ export async function readPdf(buffer: ArrayBuffer): Promise<PdfReadResult> {
       const hasText = text.replace(/\s/g, '').length >= 40;
 
       if (IS_BROWSER && (i === 1 || !hasText)) {
-        const viewport = page.getViewport({ scale: hasText ? 1.6 : 2.2 });
+        const viewport = page.getViewport({ scale: 2.2 });
         const canvas = document.createElement('canvas');
         canvas.width = Math.ceil(viewport.width);
         canvas.height = Math.ceil(viewport.height);

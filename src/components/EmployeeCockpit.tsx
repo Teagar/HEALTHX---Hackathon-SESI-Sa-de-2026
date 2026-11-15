@@ -1442,7 +1442,7 @@ export function EmployeeCockpit({
           aria-modal="true"
           aria-label="Leitor Interativo de Prontuário e Resultados de Exame"
         >
-          <div className="flex h-[90vh] w-full max-w-[1480px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
+          <div className="flex h-[calc(90vh/var(--ui-zoom))] w-full max-w-[1480px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
             <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#DED9CE] bg-white px-4 py-2.5">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F564C] text-white">

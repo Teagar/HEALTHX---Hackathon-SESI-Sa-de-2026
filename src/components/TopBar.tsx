@@ -27,17 +27,17 @@ const ROUTE_META: Record<
   { title: string; subtitle: string; badge: string }
 > = {
   '/home': {
-    title: 'SESI Saúde Acolhe — Equipe de Saúde (APS)',
+    title: 'SESILITA — Equipe de Saúde (APS)',
     subtitle: 'Coordenação do Cuidado, Filas Prioritárias e Prontuário S+',
     badge: 'Rota /home',
   },
   '/admin': {
-    title: 'SESI Saúde Acolhe — Coordenação & Inteligência APS',
+    title: 'SESILITA — Coordenação & Inteligência APS',
     subtitle: 'Sincronização S+ / Teams, Indicadores Assistenciais e Base Oficial',
     badge: 'Rota /admin',
   },
   '/gestor': {
-    title: 'SESI Saúde Acolhe — Portal do Gestor / RH',
+    title: 'SESILITA — Portal do Gestor / RH',
     subtitle: 'Indicadores Operacionais e Economia de Produção (Escopo Anônimo LGPD)',
     badge: 'Rota /gestor',
   },

@@ -1,0 +1,34 @@
+# Deploy em /opt/apps/sesilita (código em ./source), publicado pelo Caddy da rede teagar_proxy.
+name: sesilita
+services:
+  app:
+    build:
+      context: ./source
+      dockerfile: Dockerfile
+    image: sesilita:current
+    container_name: sesilita-app
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+    volumes:
+      # Banco JSON de demonstração (persiste entre deploys) e planilhas geradas.
+      - sesilita_db:/app/server/data
+      - sesilita_sheets:/app/data
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+    pids_limit: 128
+    mem_limit: 384m
+    cpus: 0.5
+    networks: [proxy]
+volumes:
+  sesilita_db:
+  sesilita_sheets:
+networks:
+  proxy:
+    external: true
+    name: teagar_proxy

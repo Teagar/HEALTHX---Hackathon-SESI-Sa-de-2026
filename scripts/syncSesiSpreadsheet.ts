@@ -112,7 +112,7 @@ const isDirectExecution =
 if (isDirectExecution) {
   const result = runSesiSpreadsheetSync('CLI_SCRIPT');
   console.log('===============================================================');
-  console.log('[HealthX Automação CSV] Sincronização Bidirecional SESI Concluída');
+  console.log('[SESILITA Automação CSV] Sincronização Bidirecional SESI Concluída');
   console.log(`• Resumo: ${result.logEntry.summaryMessage}`);
   console.log(`• Total de Funcionários Ativos no Banco: ${result.totalEmployeesAfterSync}`);
   console.log(`• Planilha Gerada: ${result.outputCsvPath}`);

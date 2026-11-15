@@ -66,7 +66,7 @@ function wrap(s: string, n: number): string[] {
 async function socPdf(title: string, p: Person, sections: Section[], ficha = ''): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(`${title} (fictício)`);
-  pdf.setProducer('HealthX SESI Saúde Acolhe demo');
+  pdf.setProducer('SESILITA · SESI Saúde Acolhe demo');
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   let page: PDFPage = pdf.addPage([595, 842]);
