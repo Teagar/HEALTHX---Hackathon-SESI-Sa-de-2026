@@ -44,6 +44,22 @@ O SESILITA tem **três canais isolados**, cada um com só o que aquele perfil pr
 
 - **Ficha única, sem abas escondidas.** Gestão do Cuidado, Plano de Cuidados Individual e Gestão de Retorno ficam na mesma tela, com prazos calculados automaticamente.
 
+### Classificação de risco: o que define a fila e o retorno
+
+O risco é dado pelo médico ou enfermeiro na consulta. A partir dele, o SESILITA ordena a fila e calcula sozinho a data do próximo retorno. O protocolo completo aparece no botão **Entenda os riscos**, na fila da equipe, e na aba **Classificação de risco** do `/admin`.
+
+![Protocolo de classificação de risco](docs/img/07-classificacao-risco.png)
+
+| Risco | Quem é | Fatores típicos (exemplos) | Retorno |
+| :--: | :-- | :-- | :-- |
+| **4** | Crítico / descompensado | Hipertensão descompensada, diabetes fora da meta (HbA1c acima de 9%), dor osteomuscular aguda recorrente, ansiedade ou depressão em estabilização | Quinzenal ou mensal, a critério médico |
+| **3** | Compensado com comorbidade | Hipertensão ou diabetes controlados, dislipidemia compensada, ansiedade ocupacional estável, medicação contínua com boa adesão | A cada 3 meses |
+| **2** | Saudável com fator de risco | Sobrepeso ou obesidade, colesterol alterado sem doença, tabagismo, sedentarismo | A cada 6 meses |
+| **1** | Saudável | Sem doença nem fator de risco ativo, vacinas e rastreios em dia | A cada 6 meses (preventivo) |
+| **0** | Sem avaliação | Ainda não fez a 1ª consulta; quanto mais dias desde a ativação, maior a prioridade | Busca ativa até a 1ª consulta |
+
+Quando a 1ª consulta é registrada, a pessoa recebe um risco de 1 a 4 e passa sozinha da fila de busca ativa para a fila de retorno.
+
 ### 2. Leitor de documentos: do documento à planilha, sem digitar
 
 ![Importação de documentos com OCR](docs/img/04-importacao-ocr.png)
@@ -66,7 +82,7 @@ O OCR roda **no próprio navegador**: nenhuma imagem ou documento é enviado a s
 | :--: | :--: |
 | ![Painel de coordenação](docs/img/05-coordenacao-admin.png) | ![Portal do Gestor com trava LGPD](docs/img/06-gestor-lgpd.png) |
 
-- **Coordenação (`/admin`)** traz o painel epidemiológico, a carteira por médico, a sincronização da planilha, o robô de busca ativa e os conectores (PostgreSQL, API SOC/S+, WhatsApp).
+- **Coordenação (`/admin`)** tem quatro abas: visão geral (indicadores, impacto e carteira por médico), classificação de risco, automações (sincronização da planilha e robô de busca ativa, com histórico) e integrações (PostgreSQL, API SOC/S+, WhatsApp).
 - **Gestor/RH (`/gestor`)** vê só **indicadores agregados e anônimos da própria empresa**, com trava **N ≥ 5**: cobertura, assiduidade nas janelas de turno e economia de produção. **Nunca** vê nome, CPF, matrícula, cargo, diagnóstico ou ficha.
 
 ## Diferenciais

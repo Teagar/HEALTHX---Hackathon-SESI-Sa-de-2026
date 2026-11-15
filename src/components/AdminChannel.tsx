@@ -13,6 +13,7 @@ import {
   Info,
   Loader2,
   Plug,
+  ShieldAlert,
   RefreshCw,
   Stethoscope,
   Users,
@@ -27,6 +28,7 @@ import {
   getPowerBiAnalyticsPayload,
 } from '../queueService';
 import { buildApsSesiXlsxBytes } from '../xlsxWorkbookService';
+import { RiskProtocolGuide } from './RiskProtocolGuide';
 
 export interface AdminChannelProps {
   employees: Employee[];
@@ -39,7 +41,7 @@ export interface AdminChannelProps {
   onResetDemo?: () => void;
 }
 
-type Section = 'BI' | 'AUTOMATIONS' | 'INFRA';
+type Section = 'BI' | 'RISK' | 'AUTOMATIONS' | 'INFRA';
 type RunningAction = 'sync' | 'bot' | 'connectors' | null;
 
 /** Nome legível de cada rotina registrada no histórico. */
@@ -114,19 +116,25 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
     {
       id: 'BI',
       label: 'Visão geral',
-      hint: 'Indicadores, impacto e carteira dos médicos',
+      hint: 'Indicadores e carteira',
       icon: <BarChart3 className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      id: 'RISK',
+      label: 'Classificação de risco',
+      hint: 'Fatores e prazos',
+      icon: <ShieldAlert className="h-4 w-4" aria-hidden="true" />,
     },
     {
       id: 'AUTOMATIONS',
       label: 'Automações',
-      hint: 'Sincronizar agendas e rodar a busca ativa',
+      hint: 'Agendas e busca ativa',
       icon: <Bot className="h-4 w-4" aria-hidden="true" />,
     },
     {
       id: 'INFRA',
       label: 'Integrações',
-      hint: 'Banco de dados e conectores externos',
+      hint: 'Banco e conectores',
       icon: <Plug className="h-4 w-4" aria-hidden="true" />,
       badge: String(effectiveDbStatus.scalabilityAdapters.length),
     },
@@ -164,7 +172,7 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
         <nav
           role="tablist"
           aria-label="Seções do painel da coordenação"
-          className={`${CARD} grid grid-cols-1 gap-1 p-1.5 sm:grid-cols-3`}
+          className={`${CARD} grid grid-cols-1 gap-1 p-1.5 sm:grid-cols-2 xl:grid-cols-4`}
         >
           {tabs.map((tab) => {
             const active = activeSection === tab.id;
@@ -355,6 +363,13 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
               </section>
             </div>
           </div>
+        )}
+
+        {/* ABA: CLASSIFICAÇÃO DE RISCO */}
+        {activeSection === 'RISK' && (
+          <section role="tabpanel" className={`${CARD} p-5 sm:p-6`}>
+            <RiskProtocolGuide />
+          </section>
         )}
 
         {/* ABA 2: AUTOMAÇÕES */}

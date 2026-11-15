@@ -1,17 +1,20 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   CalendarClock,
   Check,
   ClipboardList,
   Clock,
+  HelpCircle,
   MapPin,
   Send,
   ShieldCheck,
   Stethoscope,
+  X,
 } from 'lucide-react';
 import type { Employee } from '../types';
 import { getActiveSearchQueue, getReturnPriorityQueue } from '../queueService';
+import { RiskProtocolGuide } from './RiskProtocolGuide';
 
 export interface DualQueueViewProps {
   employees: Employee[];
@@ -90,12 +93,56 @@ export function DualQueueView({
     [activeSearchQueueProp, employees]
   );
 
+  const [showRiskGuide, setShowRiskGuide] = useState(false);
+  useEffect(() => {
+    if (!showRiskGuide) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowRiskGuide(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showRiskGuide]);
+
   const criticalActiveSearchCount = activeSearchQueue.filter(
     (emp) => emp.daysSinceActivation >= 150
   ).length;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto lg:overflow-hidden">
+      {showRiskGuide && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#101828]/45 p-4"
+          onClick={() => setShowRiskGuide(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="risk-guide-title"
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-[calc(90vh/var(--ui-zoom))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-lg"
+          >
+            <header className="flex items-start justify-between gap-3 border-b border-[#EAECF0] px-5 py-4">
+              <div>
+                <h2 id="risk-guide-title" className="text-[15px] font-semibold tracking-tight text-[#101828]">
+                  Classificação de risco da APS SESI
+                </h2>
+                <p className="text-[12px] text-[#475467]">
+                  Define a ordem da fila e o prazo do próximo retorno de cada trabalhador.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRiskGuide(false)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7EC] px-2.5 py-1.5 text-[12px] font-semibold text-[#344054] hover:border-[#C84B31] hover:text-[#C84B31]"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+                Fechar
+              </button>
+            </header>
+            <div className="overflow-y-auto bg-[#F9FAFB] p-5">
+              <RiskProtocolGuide compact />
+            </div>
+          </div>
+        </div>
+      )}
       {/* JANELA INTERNA SUPERIOR (50%): PRIORIDADE CLÍNICA DE RETORNO */}
       <section className="flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-[#E4E7EC] bg-white shadow-sm lg:min-h-0">
         <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#EAECF0] bg-[#F9FAFB] px-4 py-2.5">
@@ -112,9 +159,19 @@ export function DualQueueView({
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-[#C7EADC] bg-[#ECF8F3] px-2.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-[#0E7A5F]">
-            {returnQueue.length} em acompanhamento
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowRiskGuide(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-[#E4E7EC] bg-white px-2.5 py-0.5 text-[10.5px] font-semibold text-[#344054] hover:border-[#0E7A5F] hover:text-[#0E7A5F]"
+            >
+              <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              Entenda os riscos
+            </button>
+            <span className="rounded-full border border-[#C7EADC] bg-[#ECF8F3] px-2.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-[#0E7A5F]">
+              {returnQueue.length} em acompanhamento
+            </span>
+          </div>
         </header>
 
         <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto">
