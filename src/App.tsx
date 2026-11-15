@@ -611,7 +611,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-[calc(100vh/var(--ui-zoom))] w-full flex-col overflow-hidden bg-[#F6F7F9] text-[#101828]">
+    <div className="flex h-[calc(100vh/var(--ui-zoom))] w-full flex-col overflow-hidden bg-[#E4E8EE] text-[#101828]">
       <TopBar
         employees={employees}
         currentRoute={currentRoute}
@@ -623,7 +623,7 @@ export function App() {
       />
 
       {currentRoute === '/home' && (
-        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#F5F6F8]">
+        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#E4E8EE]">
           <SidebarTree
             employees={employees}
             selectedEmployeeId={selectedEmployeeId}

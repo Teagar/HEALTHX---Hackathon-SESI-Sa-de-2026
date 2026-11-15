@@ -70,11 +70,11 @@ export function LandingPortal({
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh/var(--ui-zoom))] w-full overflow-y-auto bg-[#F5F6F8] text-[#101828]">
+    <div className="relative min-h-[calc(100vh/var(--ui-zoom))] w-full overflow-y-auto bg-[#E4E8EE] text-[#101828]">
       {/* Brilho suave no topo */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,#E3F4EC_0%,rgba(245,246,248,0)_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,#D5EDE2_0%,rgba(228,232,238,0)_100%)]"
       />
 
       <div className="relative mx-auto flex min-h-[calc(100vh/var(--ui-zoom))] max-w-6xl flex-col justify-center gap-12 px-5 py-12 sm:px-8">

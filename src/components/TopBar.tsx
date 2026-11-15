@@ -60,7 +60,7 @@ export function TopBar({
   const meta = ROUTE_META[routeKey];
 
   return (
-    <header className="flex min-h-[56px] shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#F5F6F8] bg-white px-3 py-2 sm:px-5">
+    <header className="flex min-h-[56px] shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#D5DAE1] bg-white px-3 py-2 sm:px-5">
       {/* Identidade, Botão Início e Gatilho Mobile */}
       <div className="flex min-w-0 items-center gap-2.5">
         {currentRoute === '/home' && onToggleMobileSidebar && (

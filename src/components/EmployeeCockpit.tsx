@@ -606,7 +606,7 @@ export function EmployeeCockpit({
       </header>
 
       {/* Corpo Principal em 2 Colunas Simultâneas (7/12 Esquerda e 5/12 Direita) */}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#F6F7F9] p-3 sm:p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[#E4E8EE] p-3 sm:p-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* COLUNA ESQUERDA (7/12): Identificação, Equipe Multiprofissional, Gestão do Cuidado + PCI */}
           <div className="min-w-0 space-y-4 lg:col-span-7">

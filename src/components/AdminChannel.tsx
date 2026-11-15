@@ -77,7 +77,7 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
     });
 
   return (
-    <div className="h-full overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6">
+    <div className="h-full overflow-y-auto bg-[#E4E8EE] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-6 pb-8">
         {/* Cabeçalho do Painel de Inteligência & Agenda Integrada */}
         <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

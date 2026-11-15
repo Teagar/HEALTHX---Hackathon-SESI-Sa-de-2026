@@ -76,6 +76,40 @@ O OCR roda **no próprio navegador**: nenhuma imagem ou documento é enviado a s
 - **Zero redigitação.** Qualquer documento que chega à equipe vira linha da planilha, com rastreio do trecho de origem.
 - **Roda hoje.** É um app web leve, sem instalar nada para o trabalhador, com backend opcional (há modo offline em `localStorage`).
 
+## Stack e por que escolhemos
+
+O critério foi um só: **rodar hoje, em qualquer computador de unidade, sem custo de licença e sem tirar dado de saúde do controle do SESI.**
+
+### Interface
+
+| Tecnologia | Para que serve | Por que ela |
+| :-- | :-- | :-- |
+| **React 18** | Telas dos 3 canais | A ficha única tem dezenas de campos que se recalculam juntos (risco → regra de retorno → próxima consulta → fila). O modelo de estado do React deixa isso previsível, e é a biblioteca que mais gente sabe manter. |
+| **TypeScript** | Todo o código, frontend e backend | Os mesmos contratos (`src/types.ts`) valem no navegador e na API. Um campo renomeado na planilha de 32 colunas quebra a compilação, não o plantão. |
+| **Vite** | Servidor de desenvolvimento e build | Abre em menos de um segundo e recarrega ao salvar. O build sai como arquivos estáticos que qualquer servidor entrega. |
+| **Tailwind CSS** | Estilo e design system | As cores de risco (1 a 4) e os tons de cada bloco ficam no próprio componente. Dá para ajustar o visual rápido, sem uma folha de estilo global que cresce sem controle. |
+| **lucide-react** | Ícones | Leve, consistente e com licença livre. |
+
+### Leitor de documentos (tudo no navegador)
+
+| Tecnologia | Para que serve | Por que ela |
+| :-- | :-- | :-- |
+| **pdf.js** (Mozilla) | Ler PDFs do prontuário e gerar a prévia | É o leitor de PDF do Firefox: maduro, aberto e preserva a posição do texto, o que permite ler a ficha por rótulo ("Médico:", "Risco:"). |
+| **Tesseract.js** + modelo em português | OCR de fotos, prints e PDFs escaneados | Roda **no próprio computador**. Documento de saúde não vai para nuvem nem para IA pública, o que simplifica a conformidade com a LGPD e funciona mesmo com internet ruim. |
+| **postal-mime** | Ler e-mails `.eml` e seus anexos | Interpreta e-mails reais (codificações, anexos) sem depender de servidor. |
+| **fflate** | Abrir `.zip` (conversa do WhatsApp) e `.docx` | Descompacta no navegador e é muito pequena. |
+| **Web Crypto (SHA-256)** | Custódia de cada arquivo lido | Já vem no navegador. O hash prova que o documento arquivado é o mesmo que foi lido. |
+
+### Servidor e dados
+
+| Tecnologia | Para que serve | Por que ela |
+| :-- | :-- | :-- |
+| **Node.js + Express** | API REST (filas, ficha, Passe de Cuidado, automações) | Mesma linguagem do frontend, então as regras de negócio (`queueService.ts`) são **o mesmo código** na tela e na API. |
+| **Banco JSON local** (`server/data`) | Persistência da demonstração | Zero instalação: a banca roda com `npm run dev`. A interface também funciona sem a API, guardando em `localStorage`. |
+| **PostgreSQL 16** (`server/schema.sql`) | Caminho para produção | Tabelas normalizadas e a View Materializada com a trava LGPD **N ≥ 5** no próprio banco, para que o anonimato não dependa só da tela. |
+| **tsx** e **esbuild** | Rodar os scripts em TypeScript e empacotar a API | Os robôs (sincronização da planilha, busca ativa) rodam direto do `.ts`, e a API vira um único arquivo para produção. |
+| **Docker + Caddy** | Deploy | Imagem sem dependências desnecessárias, rodando sem root e com sistema de arquivos somente leitura. O Caddy emite e renova o HTTPS sozinho. |
+
 ## Como rodar
 
 Requisitos: Node.js 20+.
