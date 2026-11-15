@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   Archive,
+  Building2,
   CalendarCheck,
   CalendarClock,
   Check,
@@ -16,6 +17,7 @@ import {
   FileText,
   FolderOpen,
   HeartPulse,
+  IdCard,
   ListChecks,
   Lock,
   Plus,
@@ -618,200 +620,215 @@ export function EmployeeCockpit({
                 tone="cuidado"
                 subtitle="Cadastro ocupacional, médico de referência e histórico de consultas multiprofissionais"
               />
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-                <div>
-                  <label className={LABEL_CLASS}>Matrícula</label>
-                  <input
-                    type="text"
-                    value={draft.matricula}
-                    onChange={(e) => update('matricula', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Status Cadastral</label>
-                  <select
-                    value={draft.status || 'ATIVO'}
-                    onChange={(e) => update('status', e.target.value as 'ATIVO' | 'INATIVO')}
-                    className={FIELD_CLASS}
-                  >
-                    <option value="ATIVO">ATIVO</option>
-                    <option value="INATIVO">INATIVO</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Data de Nascimento</label>
-                  <input
-                    type="date"
-                    value={isIsoDate(draft.birthDate) ? draft.birthDate : '1988-01-01'}
-                    onChange={(e) => update('birthDate', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Idade e Sexo</label>
-                  <div className="flex gap-1.5">
+              <div className="mt-4 space-y-4">
+                {/* Identificação */}
+                <FormGroup title="Identificação" icon={<IdCard className="h-3.5 w-3.5" aria-hidden="true" />}>
+                  <Field label="Matrícula">
                     <input
-                      type="number"
-                      value={draft.age}
-                      onChange={(e) => update('age', Number(e.target.value))}
-                      className={`${FIELD_CLASS} w-16`}
+                      type="text"
+                      inputMode="numeric"
+                      value={draft.matricula}
+                      onChange={(e) => update('matricula', e.target.value)}
+                      placeholder="Ex.: 20261075"
+                      className={FIELD_CLASS}
                     />
-                    <select
+                  </Field>
+                  <Field label="CPF">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={draft.cpf}
+                      onChange={(e) => update('cpf', e.target.value)}
+                      placeholder="000.000.000-00"
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Telefone / WhatsApp">
+                    <input
+                      type="tel"
+                      value={draft.phone}
+                      onChange={(e) => update('phone', e.target.value)}
+                      placeholder="(71) 90000-0000"
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Status cadastral" as="div">
+                    <SegmentedControl
+                      label="Status cadastral"
+                      value={draft.status || 'ATIVO'}
+                      onChange={(v) => update('status', v as 'ATIVO' | 'INATIVO')}
+                      options={[
+                        { value: 'ATIVO', label: 'Ativo', tone: 'green' },
+                        { value: 'INATIVO', label: 'Inativo', tone: 'slate' },
+                      ]}
+                    />
+                  </Field>
+
+                  <Field label="Data de nascimento">
+                    <input
+                      type="date"
+                      value={isIsoDate(draft.birthDate) ? draft.birthDate : '1988-01-01'}
+                      onChange={(e) => {
+                        update('birthDate', e.target.value);
+                        const age = ageFromBirthDate(e.target.value);
+                        if (age !== null) update('age', age);
+                      }}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Idade" hint="automática">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={14}
+                        max={100}
+                        value={draft.age}
+                        onChange={(e) => update('age', Number(e.target.value))}
+                        className={`${FIELD_CLASS} pr-12`}
+                      />
+                      <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[11px] text-[#98A2B3]">
+                        anos
+                      </span>
+                    </div>
+                  </Field>
+                  <Field label="Sexo" as="div" className="sm:col-span-2">
+                    <SegmentedControl
+                      label="Sexo"
                       value={draft.sex}
-                      onChange={(e) =>
-                        update('sex', e.target.value as 'MASCULINO' | 'FEMININO')
-                      }
-                      className={`${FIELD_CLASS} flex-1`}
+                      onChange={(v) => update('sex', v as 'MASCULINO' | 'FEMININO')}
+                      options={[
+                        { value: 'MASCULINO', label: 'Masculino' },
+                        { value: 'FEMININO', label: 'Feminino' },
+                      ]}
+                    />
+                  </Field>
+                </FormGroup>
+
+                {/* Vínculo */}
+                <FormGroup title="Vínculo com a empresa" icon={<Building2 className="h-3.5 w-3.5" aria-hidden="true" />}>
+                  <Field label="Empresa contratante" className="sm:col-span-2">
+                    <input
+                      type="text"
+                      value={draft.companyName}
+                      onChange={(e) => update('companyName', e.target.value)}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Entrada no programa APS" className="sm:col-span-2">
+                    <input
+                      type="date"
+                      value={isIsoDate(draft.admissionDate) ? draft.admissionDate : '2025-05-15'}
+                      onChange={(e) => update('admissionDate', e.target.value)}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Cargo, setor e turno" className="sm:col-span-2 2xl:col-span-4">
+                    <input
+                      type="text"
+                      value={draft.role}
+                      onChange={(e) => update('role', e.target.value)}
+                      placeholder="Ex.: Operador de Produção (Extrusão) • 1º Turno (06h–14h)"
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                </FormGroup>
+
+                {/* Equipe e consultas */}
+                <FormGroup title="Equipe de saúde e consultas" icon={<Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />}>
+                  <Field label="Médico de referência" className="sm:col-span-2">
+                    <select
+                      value={draft.referenceDoctor}
+                      onChange={(e) => update('referenceDoctor', e.target.value)}
+                      className={FIELD_CLASS}
                     >
-                      <option value="MASCULINO">MASCULINO</option>
-                      <option value="FEMININO">FEMININO</option>
+                      {REFERENCE_DOCTORS.map((doc) => (
+                        <option key={doc} value={doc}>
+                          {doc}
+                        </option>
+                      ))}
                     </select>
-                  </div>
-                </div>
+                  </Field>
+                  <Field label="Risco inicial">
+                    <select
+                      value={draft.initialRiskLevel ?? draft.riskLevel}
+                      onChange={(e) =>
+                        update('initialRiskLevel', Number(e.target.value) as RiskLevel)
+                      }
+                      className={FIELD_CLASS}
+                    >
+                      <option value={4}>Risco 4</option>
+                      <option value={3}>Risco 3</option>
+                      <option value={2}>Risco 2</option>
+                      <option value={1}>Risco 1</option>
+                      <option value={0}>Sem avaliação</option>
+                    </select>
+                  </Field>
+                  <Field label="Equipe multiprofissional" as="div">
+                    <SegmentedControl
+                      label="Atendimento pela equipe multiprofissional"
+                      value={draft.multiTeamCare ? 'SIM' : 'NÃO'}
+                      onChange={(v) => update('multiTeamCare', v === 'SIM')}
+                      options={[
+                        { value: 'SIM', label: 'Sim', tone: 'green' },
+                        { value: 'NÃO', label: 'Não', tone: 'slate' },
+                      ]}
+                    />
+                  </Field>
 
-                <div>
-                  <label className={LABEL_CLASS}>CPF</label>
-                  <input
-                    type="text"
-                    value={draft.cpf}
-                    onChange={(e) => update('cpf', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Data de Entrada APS</label>
-                  <input
-                    type="date"
-                    value={isIsoDate(draft.admissionDate) ? draft.admissionDate : '2025-05-15'}
-                    onChange={(e) => update('admissionDate', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Telefone / WhatsApp</label>
-                  <input
-                    type="text"
-                    value={draft.phone}
-                    onChange={(e) => update('phone', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Empresa Contratante</label>
-                  <input
-                    type="text"
-                    value={draft.companyName}
-                    onChange={(e) => update('companyName', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
+                  <Field label="Últ. consulta médica">
+                    <input
+                      type="date"
+                      value={draft.lastVisit || ''}
+                      onChange={(e) => handleLastVisitChange(e.target.value)}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Últ. nutricionista">
+                    <input
+                      type="date"
+                      value={draft.lastNutritionDate || ''}
+                      onChange={(e) => update('lastNutritionDate', e.target.value)}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Últ. psicologia">
+                    <input
+                      type="date"
+                      value={draft.lastPsychologyDate || ''}
+                      onChange={(e) => update('lastPsychologyDate', e.target.value)}
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                </FormGroup>
 
-                <div>
-                  <label className={LABEL_CLASS}>Médico de Referência</label>
-                  <select
-                    value={draft.referenceDoctor}
-                    onChange={(e) => update('referenceDoctor', e.target.value)}
-                    className={FIELD_CLASS}
-                  >
-                    {REFERENCE_DOCTORS.map((doc) => (
-                      <option key={doc} value={doc}>
-                        {doc}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Atendimento Equipe Multi?</label>
-                  <select
-                    value={draft.multiTeamCare ? 'SIM' : 'NÃO'}
-                    onChange={(e) => update('multiTeamCare', e.target.value === 'SIM')}
-                    className={FIELD_CLASS}
-                  >
-                    <option value="SIM">SIM</option>
-                    <option value="NÃO">NÃO</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Últ. Consulta Nutricionista</label>
-                  <input
-                    type="date"
-                    value={draft.lastNutritionDate || ''}
-                    onChange={(e) => update('lastNutritionDate', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Últ. Consulta Psicologia</label>
-                  <input
-                    type="date"
-                    value={draft.lastPsychologyDate || ''}
-                    onChange={(e) => update('lastPsychologyDate', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-
-                <div>
-                  <label className={LABEL_CLASS}>Últ. Consulta Médica</label>
-                  <input
-                    type="date"
-                    value={draft.lastVisit || ''}
-                    onChange={(e) => handleLastVisitChange(e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Classificação de Risco Inicial</label>
-                  <select
-                    value={draft.initialRiskLevel ?? draft.riskLevel}
-                    onChange={(e) =>
-                      update('initialRiskLevel', Number(e.target.value) as RiskLevel)
-                    }
-                    className={FIELD_CLASS}
-                  >
-                    <option value={4}>RISCO 4</option>
-                    <option value={3}>RISCO 3</option>
-                    <option value={2}>RISCO 2</option>
-                    <option value={1}>RISCO 1</option>
-                    <option value={0}>Sem Avaliação</option>
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={LABEL_CLASS}>Cargo / Setor e Turno</label>
-                  <input
-                    type="text"
-                    value={draft.role}
-                    onChange={(e) => update('role', e.target.value)}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-              </div>
-
-              {/* Demandas Geradas e Anamnese */}
-              <div className="mt-3 space-y-3 border-t border-[#F2F4F7] pt-3">
-                <div>
-                  <label className={LABEL_CLASS}>
-                    Demandas Geradas na Última Consulta Médica
-                  </label>
-                  <input
-                    type="text"
-                    value={draft.lastMedicalDemands || draft.summaryLine}
-                    onChange={(e) => {
-                      update('lastMedicalDemands', e.target.value);
-                      update('summaryLine', e.target.value);
-                    }}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL_CLASS}>Anamnese e Evolução Clínica (Prontuário S+)</label>
-                  <textarea
-                    rows={2}
-                    value={draft.clinicalNotes}
-                    onChange={(e) => update('clinicalNotes', e.target.value)}
-                    className={`${FIELD_CLASS} resize-y leading-relaxed`}
-                  />
-                </div>
+                {/* Última consulta */}
+                <FormGroup
+                  title="Última consulta"
+                  icon={<FileText className="h-3.5 w-3.5" aria-hidden="true" />}
+                  columns={1}
+                >
+                  <Field label="Demandas geradas na última consulta médica">
+                    <input
+                      type="text"
+                      value={draft.lastMedicalDemands || draft.summaryLine}
+                      onChange={(e) => {
+                        update('lastMedicalDemands', e.target.value);
+                        update('summaryLine', e.target.value);
+                      }}
+                      placeholder="Ex.: Ajuste de anti-hipertensivo, solicitação de MAPA 24h…"
+                      className={FIELD_CLASS}
+                    />
+                  </Field>
+                  <Field label="Anamnese e evolução clínica (Prontuário S+)">
+                    <textarea
+                      rows={3}
+                      value={draft.clinicalNotes}
+                      onChange={(e) => update('clinicalNotes', e.target.value)}
+                      placeholder="Queixas, achados, conduta e pactuações com o trabalhador"
+                      className={`${FIELD_CLASS} resize-y leading-relaxed`}
+                    />
+                  </Field>
+                </FormGroup>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <EditableListCard
@@ -1729,6 +1746,108 @@ export function EmployeeCockpit({
         </div>
       )}
     </section>
+  );
+}
+
+/** Idade em anos completos a partir de uma data ISO (yyyy-mm-dd). */
+function ageFromBirthDate(iso: string): number | null {
+  if (!isIsoDate(iso)) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age -= 1;
+  return age >= 0 && age < 120 ? age : null;
+}
+
+interface FormGroupProps {
+  title: string;
+  icon: ReactNode;
+  columns?: 1 | 4;
+  children: ReactNode;
+}
+
+/** Subgrupo do formulário: título discreto e grade de campos. */
+function FormGroup({ title, icon, columns = 4, children }: FormGroupProps) {
+  return (
+    <fieldset className="rounded-lg border border-[#EAECF0] bg-[#FBFCFD] p-3">
+      <legend className="flex items-center gap-1.5 px-1 text-[11px] font-semibold text-[#173763]">
+        <span className="text-[#2F5D9E]">{icon}</span>
+        {title}
+      </legend>
+      <div
+        className={
+          columns === 1
+            ? 'space-y-3'
+            : 'grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2 2xl:grid-cols-4'
+        }
+      >
+        {children}
+      </div>
+    </fieldset>
+  );
+}
+
+interface FieldProps {
+  label: string;
+  hint?: string;
+  className?: string;
+  /** "div" quando o conteúdo não é um único controle (ex.: grupo de botões). */
+  as?: 'label' | 'div';
+  children: ReactNode;
+}
+
+function Field({ label, hint, className = '', as = 'label', children }: FieldProps) {
+  const Tag = as;
+  return (
+    <Tag className={`block min-w-0 ${className}`}>
+      <span className="mb-1 flex items-baseline gap-1.5 text-[11px] font-medium text-[#344054]">
+        {label}
+        {hint && <span className="truncate text-[10px] font-normal text-[#98A2B3]">· {hint}</span>}
+      </span>
+      {children}
+    </Tag>
+  );
+}
+
+interface SegmentedControlProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string; tone?: 'green' | 'slate' }[];
+}
+
+/** Escolha entre poucas opções em um clique, no lugar de um select. */
+function SegmentedControl({ label, value, onChange, options }: SegmentedControlProps) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="flex h-[30px] w-full rounded-lg border border-[#E4E7EC] bg-[#F2F4F7] p-0.5"
+    >
+      {options.map((opt) => {
+        const active = opt.value === value;
+        const activeTone =
+          opt.tone === 'slate'
+            ? 'bg-white text-[#475467] shadow-xs'
+            : opt.tone === 'green'
+              ? 'bg-white text-[#0E7A5F] shadow-xs'
+              : 'bg-white text-[#101828] shadow-xs';
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(opt.value)}
+            className={`flex-1 rounded-md px-2 text-[11.5px] font-semibold ${
+              active ? activeTone : 'text-[#98A2B3] hover:text-[#475467]'
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
