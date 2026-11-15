@@ -60,7 +60,7 @@ export function TopBar({
   const meta = ROUTE_META[routeKey];
 
   return (
-    <header className="flex min-h-[56px] shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#E2DDD3] bg-white px-3 py-2 sm:px-5">
+    <header className="flex min-h-[56px] shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#F5F6F8] bg-white px-3 py-2 sm:px-5">
       {/* Identidade, Botão Início e Gatilho Mobile */}
       <div className="flex min-w-0 items-center gap-2.5">
         {currentRoute === '/home' && onToggleMobileSidebar && (
@@ -68,7 +68,7 @@ export function TopBar({
             type="button"
             onClick={onToggleMobileSidebar}
             aria-label="Abrir lista de empresas e funcionários"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#DCD7CC] bg-[#FAF9F6] text-[#1E2926] lg:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] text-[#101828] lg:hidden"
           >
             <Menu className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -78,14 +78,14 @@ export function TopBar({
           type="button"
           onClick={() => onNavigate('/')}
           title="Voltar à Página Inicial de Seleção de Rotas"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#DCD7CC] bg-[#FAF9F6] px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1E2926] transition-colors hover:border-[#1F564C] hover:bg-[#EEF6F3] hover:text-[#1F564C]"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] px-2.5 py-1.5 text-[11.5px] font-semibold text-[#101828] transition-colors hover:border-[#0E7A5F] hover:bg-[#ECF8F3] hover:text-[#0E7A5F]"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          <Home className="h-3.5 w-3.5 text-[#1F564C]" aria-hidden="true" />
+          <Home className="h-3.5 w-3.5 text-[#0E7A5F]" aria-hidden="true" />
           <span className="hidden sm:inline">Início</span>
         </button>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1F564C] text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0E7A5F] text-white">
           {currentRoute === '/gestor' ? (
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           ) : currentRoute === '/admin' ? (
@@ -97,14 +97,11 @@ export function TopBar({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[13.5px] font-bold tracking-tight text-[#1E2926]">
+            <span className="truncate text-[13.5px] font-semibold tracking-tight text-[#101828]">
               {meta.title}
             </span>
-            <span className="hidden rounded-full bg-[#EEF6F3] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#1F564C] md:inline-block">
-              {meta.badge}
-            </span>
           </div>
-          <div className="flex items-center gap-2 text-[10.5px] text-[#5A6561]">
+          <div className="flex items-center gap-2 text-[10.5px] text-[#475467]">
             {currentRoute === '/gestor' ? (
               <span>
                 Visualização agregada por unidade industrial • Dados clínicos e individuais bloqueados (LGPD)
@@ -112,10 +109,10 @@ export function TopBar({
             ) : (
               <>
                 <span className="inline-flex items-center gap-1">
-                  <Database className="h-3 w-3 text-[#1F564C]" aria-hidden="true" />
+                  <Database className="h-3 w-3 text-[#0E7A5F]" aria-hidden="true" />
                   {dbStatus?.totalEmployeesPersisted ?? employees.length} registros ({activeCount} ativos)
                 </span>
-                <span className="hidden text-[#C8C2B6] sm:inline">•</span>
+                <span className="hidden text-[#D0D5DD] sm:inline">•</span>
                 <span className="hidden sm:inline">
                   {returnCount} em retorno · {activeSearchCount} busca ativa
                 </span>
@@ -131,7 +128,7 @@ export function TopBar({
           <button
             type="button"
             onClick={onOpenNewEmployeeOcr}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#1F564C] bg-[#1F564C] px-3.5 py-1.5 text-[11.5px] font-semibold text-white shadow-sm transition-colors hover:bg-[#163F37]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#0E7A5F] bg-[#0E7A5F] px-3.5 py-1.5 text-[11.5px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0B5F4A]"
           >
             <FileScan className="h-3.5 w-3.5" aria-hidden="true" />
             <span>+ Nova Ficha / Importar Documentos</span>
@@ -143,7 +140,7 @@ export function TopBar({
             type="button"
             onClick={onResetDemo}
             title="Recarregar censo padrão de 100 registros"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCD7CC] bg-[#FAF9F6] px-3 py-1.5 text-[11.5px] font-semibold text-[#1E2926] transition-colors hover:border-[#1F564C] hover:bg-[#EEF6F3] hover:text-[#1F564C]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] px-3 py-1.5 text-[11.5px] font-semibold text-[#101828] transition-colors hover:border-[#0E7A5F] hover:bg-[#ECF8F3] hover:text-[#0E7A5F]"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Recarregar Base</span>
@@ -151,7 +148,7 @@ export function TopBar({
         )}
 
         {currentRoute === '/gestor' && (
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#C6E4DA] bg-[#EEF6F3] px-3 py-1.5 text-[11px] font-semibold text-[#1F564C]">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#C7EADC] bg-[#ECF8F3] px-3 py-1.5 text-[11px] font-semibold text-[#0E7A5F]">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Trava LGPD Ativa (N ≥ 5)</span>
           </span>

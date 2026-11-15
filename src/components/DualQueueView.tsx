@@ -51,8 +51,8 @@ const RETURN_RISK_META: Record<ReturnRiskLevel, ReturnRiskMeta> = {
   },
   1: {
     badgeLabel: 'RISCO 1 • 6 MESES',
-    badgeClassName: 'border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]',
-    dotClassName: 'bg-[#1F564C]',
+    badgeClassName: 'border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]',
+    dotClassName: 'bg-[#0E7A5F]',
     ruleLabel: 'Preventivo 180 dias',
   },
 };
@@ -71,8 +71,8 @@ function formatDateBr(value: string): string {
 }
 
 const TH_BASE =
-  'sticky top-0 z-10 border-b border-[#E6E2D8] bg-[#FAF9F6] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[#5A6561]';
-const TD_BASE = 'border-b border-[#F2EFE8] px-3 py-2.5 align-middle';
+  'sticky top-0 z-10 border-b border-[#EAECF0] bg-[#F9FAFB] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[#475467]';
+const TD_BASE = 'border-b border-[#F3F4F6] px-3 py-2.5 align-middle';
 
 export function DualQueueView({
   employees,
@@ -97,22 +97,22 @@ export function DualQueueView({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto lg:overflow-hidden">
       {/* JANELA INTERNA SUPERIOR (50%): PRIORIDADE CLÍNICA DE RETORNO */}
-      <section className="flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-[#DED9CE] bg-white shadow-sm lg:min-h-0">
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#E6E2D8] bg-[#FAF9F6] px-4 py-2.5">
+      <section className="flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-[#E4E7EC] bg-white shadow-sm lg:min-h-0">
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#EAECF0] bg-[#F9FAFB] px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1F564C] text-white">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0E7A5F] text-white">
               <Stethoscope className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h2 className="truncate text-[12px] font-bold text-[#1E2926]">
+              <h2 className="truncate text-[12px] font-semibold text-[#101828]">
                 Prioridade Clínica de Retorno (Pacientes Acompanhados)
               </h2>
-              <p className="truncate text-[10.5px] text-[#5A6561]">
+              <p className="truncate text-[10.5px] text-[#475467]">
                 Ordenado por classificação de risco (Risco 4 → 3 → 2 → 1) e data prevista de retorno
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-[#C6E4DA] bg-[#EEF6F3] px-2.5 py-0.5 text-[10.5px] font-bold tabular-nums text-[#1F564C]">
+          <span className="rounded-full border border-[#C7EADC] bg-[#ECF8F3] px-2.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-[#0E7A5F]">
             {returnQueue.length} em acompanhamento
           </span>
         </header>
@@ -140,36 +140,36 @@ export function DualQueueView({
                 const risk = (emp.riskLevel === 0 ? 1 : emp.riskLevel) as ReturnRiskLevel;
                 const meta = RETURN_RISK_META[risk];
                 return (
-                  <tr key={emp.id} className="transition-colors hover:bg-[#FAF9F6]">
+                  <tr key={emp.id} className="transition-colors hover:bg-[#F9FAFB]">
                     <td className={TD_BASE}>
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-bold ${meta.badgeClassName}`}
+                        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${meta.badgeClassName}`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full ${meta.dotClassName}`} />
                         {meta.badgeLabel}
                       </span>
-                      <div className="mt-1 text-[10px] text-[#5A6561]">{emp.returnRule}</div>
+                      <div className="mt-1 text-[10px] text-[#475467]">{emp.returnRule}</div>
                     </td>
                     <td className={TD_BASE}>
-                      <div className="truncate text-[12.5px] font-bold text-[#1E2926]">
+                      <div className="truncate text-[12.5px] font-semibold text-[#101828]">
                         {emp.name}
                       </div>
-                      <div className="truncate text-[10.5px] text-[#5A6561]">
+                      <div className="truncate text-[10.5px] text-[#475467]">
                         Mat. {emp.matricula} • {emp.age} anos • {emp.shift.split(' ')[0]} Turno
                       </div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[10.5px] font-medium text-[#1F564C]">
+                      <div className="mt-0.5 flex items-center gap-1 text-[10.5px] font-medium text-[#0E7A5F]">
                         <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{emp.companyName}</span>
                       </div>
                     </td>
                     <td className={TD_BASE}>
-                      <div className="line-clamp-1 text-[11.5px] font-medium text-[#1E2926]">
+                      <div className="line-clamp-1 text-[11.5px] font-medium text-[#101828]">
                         {emp.lastMedicalDemands || emp.summaryLine}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-[#5A6561]">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-[#475467]">
                         <span>Médico: {emp.referenceDoctor}</span>
-                        <span className="inline-flex items-center gap-1 font-medium text-[#1E2926]">
-                          <CalendarClock className="h-3 w-3 text-[#1F564C]" />
+                        <span className="inline-flex items-center gap-1 font-medium text-[#101828]">
+                          <CalendarClock className="h-3 w-3 text-[#0E7A5F]" />
                           Retorno: {formatDateBr(emp.nextVisit)}
                         </span>
                       </div>
@@ -190,29 +190,29 @@ export function DualQueueView({
       </section>
 
       {/* JANELA INTERNA INFERIOR (50%): BUSCA ATIVA DE 1ª CONSULTA */}
-      <section className="flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-[#DED9CE] bg-white shadow-sm lg:min-h-0">
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#E6E2D8] bg-[#FAF9F6] px-4 py-2.5">
+      <section className="flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-[#E4E7EC] bg-white shadow-sm lg:min-h-0">
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#EAECF0] bg-[#F9FAFB] px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#C84B31] text-white">
               <ClipboardList className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h2 className="truncate text-[12px] font-bold text-[#1E2926]">
+              <h2 className="truncate text-[12px] font-semibold text-[#101828]">
                 Busca Ativa de 1ª Consulta (Nunca Agendaram)
               </h2>
-              <p className="truncate text-[10.5px] text-[#5A6561]">
+              <p className="truncate text-[10.5px] text-[#475467]">
                 Ordenado pelo maior tempo ativo sem agendar a 1ª consulta de acolhimento
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             {criticalActiveSearchCount > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#F5C6BC] bg-[#FDF2F0] px-2.5 py-0.5 text-[10px] font-bold text-[#C84B31]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#F5C6BC] bg-[#FDF2F0] px-2.5 py-0.5 text-[10px] font-semibold text-[#C84B31]">
                 <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                 {criticalActiveSearchCount} ≥ 150 dias
               </span>
             )}
-            <span className="rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-2.5 py-0.5 text-[10.5px] font-bold tabular-nums text-[#475569]">
+            <span className="rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-2.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-[#475569]">
               {activeSearchQueue.length} pendentes
             </span>
           </div>
@@ -240,10 +240,10 @@ export function DualQueueView({
               {activeSearchQueue.map((emp) => {
                 const isCritical = emp.daysSinceActivation >= 150;
                 return (
-                  <tr key={emp.id} className="transition-colors hover:bg-[#FAF9F6]">
+                  <tr key={emp.id} className="transition-colors hover:bg-[#F9FAFB]">
                     <td className={TD_BASE}>
                       <span
-                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold tabular-nums ${
+                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold tabular-nums ${
                           isCritical
                             ? 'border-[#F5C6BC] bg-[#FDF2F0] text-[#C84B31]'
                             : 'border-[#CBD5E1] bg-[#F8FAFC] text-[#475569]'
@@ -252,32 +252,32 @@ export function DualQueueView({
                         <Clock className="h-3 w-3" aria-hidden="true" />
                         {emp.daysSinceActivation} dias
                       </span>
-                      <div className="mt-1 text-[10px] text-[#5A6561]">
+                      <div className="mt-1 text-[10px] text-[#475467]">
                         Entrada: {formatDateBr(emp.admissionDate)}
                       </div>
                     </td>
                     <td className={TD_BASE}>
-                      <div className="truncate text-[12.5px] font-bold text-[#1E2926]">
+                      <div className="truncate text-[12.5px] font-semibold text-[#101828]">
                         {emp.name}
                       </div>
-                      <div className="truncate text-[10.5px] text-[#5A6561]">
+                      <div className="truncate text-[10.5px] text-[#475467]">
                         Mat. {emp.matricula} • {emp.age} anos • {emp.shift.split(' ')[0]} Turno
                       </div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[10.5px] font-medium text-[#1F564C]">
+                      <div className="mt-0.5 flex items-center gap-1 text-[10.5px] font-medium text-[#0E7A5F]">
                         <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{emp.companyName}</span>
                       </div>
                     </td>
                     <td className={TD_BASE}>
-                      <div className="line-clamp-1 text-[11.5px] font-medium text-[#1E2926]">
+                      <div className="line-clamp-1 text-[11.5px] font-medium text-[#101828]">
                         {emp.summaryLine}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-[#1F564C]">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-[#0E7A5F]">
                         <span className="inline-flex items-center gap-1">
                           <ShieldCheck className="h-3 w-3" />
                           {emp.protectedWindowSlot ?? 'Janela protegida do turno'}
                         </span>
-                        <span className="text-[#5A6561]">Ref.: {emp.referenceDoctor}</span>
+                        <span className="text-[#475467]">Ref.: {emp.referenceDoctor}</span>
                       </div>
                     </td>
                     <td className={TD_BASE}>
@@ -316,7 +316,7 @@ function RowActions({ employee, onOpenProfile, onSendWhatsApp }: RowActionsProps
       <button
         type="button"
         onClick={() => onOpenProfile(employee.id)}
-        className="shrink-0 rounded-lg border border-[#1F564C] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1F564C] transition-colors hover:bg-[#EEF6F3]"
+        className="shrink-0 rounded-lg border border-[#0E7A5F] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0E7A5F] transition-colors hover:bg-[#ECF8F3]"
       >
         Abrir Ficha
       </button>
@@ -326,8 +326,8 @@ function RowActions({ employee, onOpenProfile, onSendWhatsApp }: RowActionsProps
         disabled={sent}
         className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
           sent
-            ? 'cursor-default border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]'
-            : 'border-[#1F564C] bg-[#1F564C] text-white hover:bg-[#163F37]'
+            ? 'cursor-default border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]'
+            : 'border-[#0E7A5F] bg-[#0E7A5F] text-white hover:bg-[#0B5F4A]'
         }`}
       >
         {sent ? (

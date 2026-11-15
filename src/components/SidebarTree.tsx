@@ -41,8 +41,8 @@ const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     label: 'R2',
   },
   1: {
-    dotClassName: 'bg-[#1F564C]',
-    badgeClassName: 'border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]',
+    dotClassName: 'bg-[#0E7A5F]',
+    badgeClassName: 'border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]',
     label: 'R1',
   },
   0: {
@@ -178,25 +178,25 @@ export function SidebarTree({
   };
 
   const content = (
-    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-[#DED9CE] bg-[#EAE5DC]">
-      <div className="shrink-0 space-y-2.5 border-b border-[#DED9CE] p-3">
+    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-[#E4E7EC] bg-[#FFFFFF]">
+      <div className="shrink-0 space-y-2.5 border-b border-[#E4E7EC] p-3">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => handleSelect(null)}
             className={`flex flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-left text-[12px] font-semibold transition-all ${
               selectedEmployeeId === null
-                ? 'border-[#1F564C] bg-[#1F564C] text-white shadow-sm'
-                : 'border-[#DCD7CC] bg-white text-[#1E2926] hover:border-[#1F564C]'
+                ? 'border-[#0E7A5F] bg-[#0E7A5F] text-white shadow-sm'
+                : 'border-[#E4E7EC] bg-white text-[#101828] hover:border-[#0E7A5F]'
             }`}
           >
             <LayoutList className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">Filas Prioritárias</span>
             <span
-              className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+              className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
                 selectedEmployeeId === null
                   ? 'bg-white/20 text-white'
-                  : 'bg-[#EEF6F3] text-[#1F564C]'
+                  : 'bg-[#ECF8F3] text-[#0E7A5F]'
               }`}
             >
               {activeCount}
@@ -207,7 +207,7 @@ export function SidebarTree({
             <button
               type="button"
               onClick={onCloseMobile}
-              className="rounded-lg border border-[#DCD7CC] bg-white p-2 text-[#5A6561] lg:hidden"
+              className="rounded-lg border border-[#E4E7EC] bg-white p-2 text-[#475467] lg:hidden"
               aria-label="Fechar menu lateral"
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -217,7 +217,7 @@ export function SidebarTree({
 
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8A938F]"
+            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#98A2B3]"
             aria-hidden="true"
           />
           <input
@@ -226,14 +226,14 @@ export function SidebarTree({
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar nome, matrícula ou médico..."
             aria-label="Buscar funcionário"
-            className="w-full rounded-lg border border-[#DCD7CC] bg-white py-1.5 pl-8 pr-7 text-[11.5px] text-[#1E2926] placeholder:text-[#8A938F] focus:border-[#1F564C] focus:outline-none"
+            className="w-full rounded-lg border border-[#E4E7EC] bg-white py-1.5 pl-8 pr-7 text-[11.5px] text-[#101828] placeholder:text-[#98A2B3] focus:border-[#0E7A5F] focus:outline-none"
           />
           {query.length > 0 && (
             <button
               type="button"
               onClick={() => setQuery('')}
               aria-label="Limpar busca"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-[#8A938F] hover:text-[#1E2926]"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-[#98A2B3] hover:text-[#101828]"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -244,7 +244,7 @@ export function SidebarTree({
           value={companyFilter}
           onChange={(event) => setCompanyFilter(event.target.value)}
           aria-label="Filtrar por empresa"
-          className="w-full rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
+          className="w-full rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-[#101828] focus:border-[#0E7A5F] focus:outline-none"
         >
           <option value="all">Todas as 6 empresas ({filteredEmployees.length})</option>
           {companies.map((company) => (
@@ -255,13 +255,13 @@ export function SidebarTree({
         </select>
 
         {inactiveCount > 0 && (
-          <label className="flex cursor-pointer items-center justify-between rounded-md bg-white/70 px-2 py-1 text-[10.5px] text-[#5A6561]">
+          <label className="flex cursor-pointer items-center justify-between rounded-md bg-white/70 px-2 py-1 text-[10.5px] text-[#475467]">
             <span>Exibir vínculos inativos ({inactiveCount})</span>
             <input
               type="checkbox"
               checked={showInactive}
               onChange={(e) => setShowInactive(e.target.checked)}
-              className="h-3.5 w-3.5 rounded accent-[#1F564C]"
+              className="h-3.5 w-3.5 rounded accent-[#0E7A5F]"
             />
           </label>
         )}
@@ -270,9 +270,9 @@ export function SidebarTree({
       {/* Lista de Empresas e Funcionários (containers iniciam colapsados) */}
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {groupedCompanies.length === 0 ? (
-          <div className="mx-1 mt-4 rounded-xl border border-dashed border-[#DCD7CC] bg-white/80 px-3 py-6 text-center">
-            <Users className="mx-auto h-5 w-5 text-[#8A938F]" aria-hidden="true" />
-            <p className="mt-2 text-[11.5px] font-semibold text-[#5A6561]">
+          <div className="mx-1 mt-4 rounded-xl border border-dashed border-[#E4E7EC] bg-white/80 px-3 py-6 text-center">
+            <Users className="mx-auto h-5 w-5 text-[#98A2B3]" aria-hidden="true" />
+            <p className="mt-2 text-[11.5px] font-semibold text-[#475467]">
               Nenhum registro encontrado
             </p>
           </div>
@@ -286,24 +286,24 @@ export function SidebarTree({
                     type="button"
                     onClick={() => toggleCompany(company.id)}
                     aria-expanded={expanded}
-                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[#DDD7CB]"
+                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[#E4E7EC]"
                   >
                     {expanded ? (
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#5A6561]" />
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#475467]" />
                     ) : (
-                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#5A6561]" />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#475467]" />
                     )}
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-[#1F564C]" />
-                    <span className="min-w-0 flex-1 truncate text-[11.5px] font-bold text-[#1E2926]">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-[#0E7A5F]" />
+                    <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-[#101828]">
                       {company.name}
                     </span>
-                    <span className="rounded-full bg-white px-1.5 py-0.5 text-[9.5px] font-bold tabular-nums text-[#5A6561]">
+                    <span className="rounded-full bg-white px-1.5 py-0.5 text-[9.5px] font-semibold tabular-nums text-[#475467]">
                       {members.length}
                     </span>
                   </button>
 
                   {expanded && (
-                    <ul className="mt-0.5 space-y-0.5 border-l border-[#DCD7CC] pl-2">
+                    <ul className="mt-0.5 space-y-0.5 border-l border-[#E4E7EC] pl-2">
                       {members.map((emp) => {
                         const riskStyle = RISK_STYLES[emp.riskLevel];
                         const isSelected = selectedEmployeeId === emp.id;
@@ -317,7 +317,7 @@ export function SidebarTree({
                               onClick={() => handleSelect(emp.id)}
                               className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-all ${
                                 isSelected
-                                  ? 'border-[#1F564C] bg-white shadow-sm'
+                                  ? 'border-[#0E7A5F] bg-white shadow-sm'
                                   : 'border-transparent hover:bg-white/70'
                               } ${isInactive ? 'opacity-60' : ''}`}
                             >
@@ -327,12 +327,12 @@ export function SidebarTree({
                               <span className="min-w-0 flex-1">
                                 <span
                                   className={`block truncate text-[11.5px] font-medium ${
-                                    isSelected ? 'font-bold text-[#1F564C]' : 'text-[#1E2926]'
+                                    isSelected ? 'font-semibold text-[#0E7A5F]' : 'text-[#101828]'
                                   }`}
                                 >
                                   {emp.name}
                                 </span>
-                                <span className="block truncate text-[9.5px] text-[#5A6561]">
+                                <span className="block truncate text-[9.5px] text-[#475467]">
                                   Mat. {emp.matricula} • {emp.referenceDoctor}
                                 </span>
                               </span>
@@ -346,7 +346,7 @@ export function SidebarTree({
                                 </span>
                               ) : (
                                 <span
-                                  className={`shrink-0 rounded border px-1 py-0.5 text-[9.5px] font-bold ${riskStyle.badgeClassName}`}
+                                  className={`shrink-0 rounded border px-1 py-0.5 text-[9.5px] font-semibold ${riskStyle.badgeClassName}`}
                                 >
                                   {riskStyle.label}
                                 </span>
@@ -364,7 +364,7 @@ export function SidebarTree({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[#DED9CE] px-3 py-2 text-[10px] font-medium text-[#5A6561]">
+      <div className="shrink-0 border-t border-[#E4E7EC] px-3 py-2 text-[10px] font-medium text-[#475467]">
         Censo integral: {employees.length} registros ({activeCount} ativos • {inactiveCount} inativos)
       </div>
     </aside>
@@ -376,7 +376,7 @@ export function SidebarTree({
       {mobileOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div
-            className="fixed inset-0 bg-[#1E2926]/40 backdrop-blur-[1px]"
+            className="fixed inset-0 bg-[#101828]/40 backdrop-blur-[1px]"
             onClick={onCloseMobile}
             aria-hidden="true"
           />

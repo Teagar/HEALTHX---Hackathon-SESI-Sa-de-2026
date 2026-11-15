@@ -80,7 +80,7 @@ const SAMPLE_REGISTRATION_NAME = 'Exemplo: ficha de cadastro (texto colado)';
 
 /** Classe comum dos controles do formulário de conferência. */
 const FIELD_CONTROL_CLASS =
-  'w-full rounded-md border border-[#DCD7CC] bg-white px-2 py-1.5 text-[11.5px] font-medium text-[#1E2926] focus:border-[#1F564C] focus:outline-none';
+  'w-full rounded-md border border-[#E4E7EC] bg-white px-2 py-1.5 text-[11.5px] font-medium text-[#101828] focus:border-[#0E7A5F] focus:outline-none';
 
 /** Campos que ocupam a linha inteira na grade de 2 colunas. */
 const WIDE_FIELD_KEYS = new Set<ColKey>(['nome', 'empresa', 'demandas', 'historico', 'statusPlano']);
@@ -124,7 +124,7 @@ function renderHighlightedHtml(rawText: string, activeEvidence: string): string 
         html = html.replace(
           re,
           (m) =>
-            `<mark class="rounded bg-[#FDE68A] px-1 py-0.5 font-semibold text-[#1E2926] ring-2 ring-[#F59E0B]/40">${m}</mark>`
+            `<mark class="rounded bg-[#FDE68A] px-1 py-0.5 font-semibold text-[#101828] ring-2 ring-[#F59E0B]/40">${m}</mark>`
         );
         break;
       }
@@ -606,20 +606,20 @@ export function NewEmployeeOcrModal({
         onClick={focus}
         className={`min-w-0 rounded-lg border p-2 transition-all ${wide ? 'col-span-2' : ''} ${
           isFocused
-            ? 'border-[#1F564C] bg-white ring-2 ring-[#1F564C]/15'
+            ? 'border-[#0E7A5F] bg-white ring-2 ring-[#0E7A5F]/15'
             : field.state === 'changed'
-            ? 'border-[#F5DFB8] bg-[#FFFDF8]'
-            : 'border-[#E5E0D5] bg-white'
+            ? 'border-[#F5DFB8] bg-[#FFFFFF]'
+            : 'border-[#EAECF0] bg-white'
         }`}
       >
         <div className="mb-1 flex items-center justify-between gap-1.5">
-          <span className="truncate text-[11px] font-bold text-[#1E2926]" title={label}>
+          <span className="truncate text-[11px] font-semibold text-[#101828]" title={label}>
             {label}
           </span>
           <span
-            className={`shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-semibold ${
               field.state === 'new'
-                ? 'bg-[#EEF6F3] text-[#1F564C]'
+                ? 'bg-[#ECF8F3] text-[#0E7A5F]'
                 : field.state === 'changed'
                 ? 'bg-[#FDF7EC] text-[#C26D27]'
                 : 'bg-[#F1F5F9] text-[#64748B]'
@@ -632,14 +632,14 @@ export function NewEmployeeOcrModal({
         {control}
 
         {field.current && field.proposed !== field.current && (
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-[#5A6561]">
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-[#475467]">
             <span className="min-w-0 truncate" title={field.current}>
               Antes: <s>{field.current}</s>
             </span>
             <button
               type="button"
               onClick={() => handleToggleFieldRestore(field.key)}
-              className="shrink-0 font-semibold text-[#1F564C] hover:underline"
+              className="shrink-0 font-semibold text-[#0E7A5F] hover:underline"
             >
               {field.value === field.current ? 'Usar o do documento' : 'Manter o que estava'}
             </button>
@@ -647,7 +647,7 @@ export function NewEmployeeOcrModal({
         )}
 
         {isFocused && field.evidence && (
-          <p className="mt-1.5 rounded bg-[#FEFCE8] px-1.5 py-1 text-[10px] leading-snug text-[#5A6561]">
+          <p className="mt-1.5 rounded bg-[#FEFCE8] px-1.5 py-1 text-[10px] leading-snug text-[#475467]">
             <span className="font-semibold text-[#A16207]">Trecho do documento:</span> “{field.evidence}”
           </p>
         )}
@@ -669,32 +669,32 @@ export function NewEmployeeOcrModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E2926]/65 p-2 backdrop-blur-[2px] sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#101828]/65 p-2 backdrop-blur-[2px] sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="secilita-ocr-title"
     >
-      <div className="flex h-[calc(94vh/var(--ui-zoom))] w-full max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
+      <div className="flex h-[calc(94vh/var(--ui-zoom))] w-full max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-[#E4E7EC] bg-[#F9FAFB] shadow-2xl">
         {/* Cabeçalho Superior do Workspace de Importação e OCR */}
-        <header className="flex shrink-0 items-start gap-3 border-b border-[#DED9CE] bg-white py-2.5 pl-4 pr-3">
+        <header className="flex shrink-0 items-start gap-3 border-b border-[#E4E7EC] bg-white py-2.5 pl-4 pr-3">
           <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F564C] text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0E7A5F] text-white">
               <FileScan className="h-4 w-4" aria-hidden="true" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2
                   id="secilita-ocr-title"
-                  className="text-[14px] font-bold text-[#1E2926]"
+                  className="text-[14px] font-semibold text-[#101828]"
                 >
                   Importar Documentos e Cadastrar Ficha (Leitor Interativo em 3 Colunas)
                 </h2>
-                <span className="rounded-full bg-[#EEF6F3] px-2.5 py-0.5 text-[10px] font-bold text-[#1F564C]">
+                <span className="rounded-full bg-[#ECF8F3] px-2.5 py-0.5 text-[10px] font-semibold text-[#0E7A5F]">
                   Motor SESILITA • 32 Colunas SESI
                 </span>
               </div>
-              <p className="text-[11px] text-[#5A6561]">
+              <p className="text-[11px] text-[#475467]">
                 1. Fila de documentos em lote à esquerda · 2. Visualização do documento com evidência marcada ao centro · 3. Campos cadastrais e clínicos da planilha à direita
               </p>
             </div>
@@ -702,12 +702,12 @@ export function NewEmployeeOcrModal({
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Carregador dos 14 anexos de teste do repositório secilita_planilhas */}
-            <div className="flex items-center rounded-lg border border-[#DCD7CC] bg-[#FAF9F6] p-0.5">
+            <div className="flex items-center rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] p-0.5">
               <select
                 value={selectedDemoFile}
                 onChange={(e) => setSelectedDemoFile(e.target.value)}
                 aria-label="Selecionar documento de exemplo"
-                className="rounded-l-md bg-transparent px-2 py-1 text-[11px] font-medium text-[#1E2926] focus:outline-none"
+                className="rounded-l-md bg-transparent px-2 py-1 text-[11px] font-medium text-[#101828] focus:outline-none"
               >
                 <option value="all">Todos os 14 documentos de exemplo</option>
                 {SECILITA_DEMO_FILES.map((fn) => (
@@ -720,7 +720,7 @@ export function NewEmployeeOcrModal({
                 type="button"
                 onClick={() => void handleLoadDemoPack()}
                 disabled={isLoadingFiles}
-                className="inline-flex items-center gap-1 rounded-md bg-[#1F564C] px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-[#163F37] disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-md bg-[#0E7A5F] px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-[#0B5F4A] disabled:opacity-50"
               >
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
                 <span>Carregar Anexos</span>
@@ -730,7 +730,7 @@ export function NewEmployeeOcrModal({
             <button
               type="button"
               onClick={() => void handleLoadCompleteRegistrationSample()}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C]/30 bg-[#EEF6F3] px-2.5 py-1.5 text-[11px] font-semibold text-[#1F564C] hover:bg-[#1F564C] hover:text-white"
+              className="inline-flex items-center gap-1 rounded-lg border border-[#0E7A5F]/30 bg-[#ECF8F3] px-2.5 py-1.5 text-[11px] font-semibold text-[#0E7A5F] hover:bg-[#0E7A5F] hover:text-white"
             >
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               <span>+ Ficha de Cadastro Completa</span>
@@ -744,23 +744,23 @@ export function NewEmployeeOcrModal({
             onClick={onClose}
             aria-label="Fechar importação de documentos"
             title="Fechar (Esc)"
-            className="group inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#DCD7CC] bg-white py-1.5 pl-2.5 pr-3 text-[12px] font-semibold text-[#1E2926] shadow-sm transition-colors hover:border-[#C84B31] hover:bg-[#FDF2F0] hover:text-[#C84B31] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F564C]/40"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#E4E7EC] bg-white py-1.5 pl-2.5 pr-3 text-[12px] font-semibold text-[#101828] shadow-sm transition-colors hover:border-[#C84B31] hover:bg-[#FDF2F0] hover:text-[#C84B31] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7A5F]/40"
           >
             <X className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
             <span>Fechar</span>
-            <kbd className="ml-0.5 rounded border border-[#DCD7CC] bg-[#F5F3EE] px-1 font-mono text-[10px] font-medium text-[#5A6561] group-hover:border-[#F5C6BC] group-hover:bg-white group-hover:text-[#C84B31]">
+            <kbd className="ml-0.5 rounded border border-[#E4E7EC] bg-[#F6F7F9] px-1 font-mono text-[10px] font-medium text-[#475467] group-hover:border-[#F5C6BC] group-hover:bg-white group-hover:text-[#C84B31]">
               Esc
             </kbd>
           </button>
         </header>
 
         {statusBanner && (
-          <div className="flex shrink-0 items-center justify-between border-b border-[#C6E4DA] bg-[#EEF6F3] px-4 py-1.5 text-[11.5px] font-medium text-[#1F564C]">
+          <div className="flex shrink-0 items-center justify-between border-b border-[#C7EADC] bg-[#ECF8F3] px-4 py-1.5 text-[11.5px] font-medium text-[#0E7A5F]">
             <span>{statusBanner}</span>
             <button
               type="button"
               onClick={() => setStatusBanner('')}
-              className="text-[10.5px] font-bold underline"
+              className="text-[10.5px] font-semibold underline"
             >
               Ocultar
             </button>
@@ -772,9 +772,9 @@ export function NewEmployeeOcrModal({
           {/* ================================================================ */}
           {/* COLUNA 1 (ESQUERDA - 3/12): FILA DE DOCUMENTOS INSERIDOS EM LOTE */}
           {/* ================================================================ */}
-          <aside className="flex min-h-0 flex-col border-b border-[#DED9CE] bg-[#F2EFE8] lg:col-span-3 lg:border-b-0 lg:border-r">
+          <aside className="flex min-h-0 flex-col border-b border-[#E4E7EC] bg-[#F3F4F6] lg:col-span-3 lg:border-b-0 lg:border-r">
             {/* Zona de Upload em Lote (Drag & Drop + Botões) */}
-            <div className="shrink-0 space-y-2 border-b border-[#DED9CE] p-3">
+            <div className="shrink-0 space-y-2 border-b border-[#E4E7EC] p-3">
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -784,15 +784,15 @@ export function NewEmployeeOcrModal({
                 onDrop={handleDrop}
                 className={`rounded-xl border-2 border-dashed p-3 text-center transition-colors ${
                   isDraggingOver
-                    ? 'border-[#1F564C] bg-[#EEF6F3]'
-                    : 'border-[#C8C2B6] bg-white/90'
+                    ? 'border-[#0E7A5F] bg-[#ECF8F3]'
+                    : 'border-[#D0D5DD] bg-white/90'
                 }`}
               >
-                <Upload className="mx-auto h-5 w-5 text-[#1F564C]" aria-hidden="true" />
-                <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">
+                <Upload className="mx-auto h-5 w-5 text-[#0E7A5F]" aria-hidden="true" />
+                <p className="mt-1 text-[11.5px] font-semibold text-[#101828]">
                   Solte os arquivos aqui em lote
                 </p>
-                <p className="text-[10px] text-[#5A6561]">
+                <p className="text-[10px] text-[#475467]">
                   PDF (digital ou escaneado), fotos JPG/PNG, e-mails (.eml/.html), conversas de WhatsApp (.txt/.zip), Word (.docx), XML, JSON ou CSV
                 </p>
                 <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
@@ -810,7 +810,7 @@ export function NewEmployeeOcrModal({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1 rounded-lg bg-[#1F564C] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-[#163F37]"
+                    className="inline-flex items-center gap-1 rounded-lg bg-[#0E7A5F] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0B5F4A]"
                   >
                     <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Escolher arquivos</span>
@@ -818,35 +818,35 @@ export function NewEmployeeOcrModal({
                   <button
                     type="button"
                     onClick={() => setShowPasteBox((v) => !v)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#101828] hover:border-[#0E7A5F]"
                   >
-                    <ClipboardPaste className="h-3.5 w-3.5 text-[#1F564C]" aria-hidden="true" />
+                    <ClipboardPaste className="h-3.5 w-3.5 text-[#0E7A5F]" aria-hidden="true" />
                     <span>Colar um texto</span>
                   </button>
                 </div>
               </div>
 
               {showPasteBox && (
-                <div className="rounded-xl border border-[#DCD7CC] bg-white p-2.5 shadow-sm">
+                <div className="rounded-xl border border-[#E4E7EC] bg-white p-2.5 shadow-sm">
                   <textarea
                     rows={3}
                     value={pastedText}
                     onChange={(e) => setPastedText(e.target.value)}
                     placeholder="Cole mensagem de WhatsApp, corpo de e-mail, evolução médica ou ficha de cadastro..."
-                    className="w-full rounded-lg border border-[#DCD7CC] p-2 text-[11px] text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
+                    className="w-full rounded-lg border border-[#E4E7EC] p-2 text-[11px] text-[#101828] focus:border-[#0E7A5F] focus:outline-none"
                   />
                   <div className="mt-1.5 flex justify-end gap-1.5">
                     <button
                       type="button"
                       onClick={() => setShowPasteBox(false)}
-                      className="rounded px-2 py-1 text-[10.5px] text-[#5A6561]"
+                      className="rounded px-2 py-1 text-[10.5px] text-[#475467]"
                     >
                       Cancelar
                     </button>
                     <button
                       type="button"
                       onClick={() => void handleReadPastedText()}
-                      className="rounded bg-[#1F564C] px-2.5 py-1 text-[10.5px] font-semibold text-white"
+                      className="rounded bg-[#0E7A5F] px-2.5 py-1 text-[10.5px] font-semibold text-white"
                     >
                       Ler texto
                     </button>
@@ -855,24 +855,24 @@ export function NewEmployeeOcrModal({
               )}
 
               {/* Barra de Progresso do Lote */}
-              <div className="rounded-lg border border-[#DED9CE] bg-white px-3 py-2">
+              <div className="rounded-lg border border-[#E4E7EC] bg-white px-3 py-2">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-bold text-[#1E2926]">
+                  <span className="font-semibold text-[#101828]">
                     {stats.done} de {stats.total} conferidos
                   </span>
                   {stats.done > 0 && (
                     <button
                       type="button"
                       onClick={handleClearReviewed}
-                      className="text-[10px] font-semibold text-[#1F564C] hover:underline"
+                      className="text-[10px] font-semibold text-[#0E7A5F] hover:underline"
                     >
                       Limpar conferidos
                     </button>
                   )}
                 </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#E2DDD3]">
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#F5F6F8]">
                   <div
-                    className="h-full bg-[#1F564C] transition-all duration-300"
+                    className="h-full bg-[#0E7A5F] transition-all duration-300"
                     style={{ width: `${stats.pct}%` }}
                   />
                 </div>
@@ -882,7 +882,7 @@ export function NewEmployeeOcrModal({
             {/* Lista de Documentos do Lote */}
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               {queue.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-[#DCD7CC] bg-white/70 p-6 text-center text-[11.5px] text-[#5A6561]">
+                <div className="rounded-xl border border-dashed border-[#E4E7EC] bg-white/70 p-6 text-center text-[11.5px] text-[#475467]">
                   Nenhum documento na fila. Solte arquivos acima ou clique em{' '}
                   <strong>Carregar Anexos</strong>.
                 </div>
@@ -909,25 +909,25 @@ export function NewEmployeeOcrModal({
                           }}
                           className={`flex w-full items-start justify-between gap-2 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
-                              ? 'border-[#1F564C] bg-white shadow-sm ring-1 ring-[#1F564C]/25'
-                              : 'border-[#DED9CE] bg-white/75 hover:bg-white'
+                              ? 'border-[#0E7A5F] bg-white shadow-sm ring-1 ring-[#0E7A5F]/25'
+                              : 'border-[#E4E7EC] bg-white/75 hover:bg-white'
                           } ${item.status !== 'pend' ? 'opacity-75' : ''}`}
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
-                              <span className="truncate text-[11.5px] font-bold text-[#1E2926]">
+                              <span className="truncate text-[11.5px] font-semibold text-[#101828]">
                                 {empName}
                               </span>
                             </div>
-                            <p className="mt-0.5 truncate text-[10px] text-[#5A6561]">
+                            <p className="mt-0.5 truncate text-[10px] text-[#475467]">
                               {docLabel} · {KIND_LABEL[item.extraction.kind]}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-1">
-                              <span className="rounded bg-[#F2EFE8] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#5A6561]">
+                              <span className="rounded bg-[#F3F4F6] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#475467]">
                                 {item.doc.method}
                               </span>
                               {item.isNewEmployeeMode ? (
-                                <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1F564C]">
+                                <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#0E7A5F]">
                                   Novo Cadastro
                                 </span>
                               ) : (
@@ -939,9 +939,9 @@ export function NewEmployeeOcrModal({
                           </div>
 
                           <span
-                            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-semibold ${
                               item.status === 'ok'
-                                ? 'bg-[#EEF6F3] text-[#1F564C]'
+                                ? 'bg-[#ECF8F3] text-[#0E7A5F]'
                                 : item.status === 'skip'
                                 ? 'bg-[#F1F5F9] text-[#64748B]'
                                 : 'bg-[#FDF7EC] text-[#C26D27]'
@@ -965,19 +965,19 @@ export function NewEmployeeOcrModal({
           {/* ================================================================ */}
           {/* COLUNA 2 (CENTRO - 5/12): VISUALIZAÇÃO INTERATIVA DO DOCUMENTO    */}
           {/* ================================================================ */}
-          <section className="flex min-h-0 flex-col border-b border-[#DED9CE] bg-[#E8E3D9] lg:col-span-5 lg:border-b-0 lg:border-r">
+          <section className="flex min-h-0 flex-col border-b border-[#E4E7EC] bg-[#EAECF0] lg:col-span-5 lg:border-b-0 lg:border-r">
             {currentItem ? (
               <>
                 {/* Barra de Topo do Visualizador Central */}
-                <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#DED9CE] bg-white px-3.5 py-2">
-                  <div className="flex items-center gap-1 rounded-lg bg-[#F2EFE8] p-0.5">
+                <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#E4E7EC] bg-white px-3.5 py-2">
+                  <div className="flex items-center gap-1 rounded-lg bg-[#F3F4F6] p-0.5">
                     <button
                       type="button"
                       onClick={() => setDocTab('rendered')}
                       className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                         docTab === 'rendered'
-                          ? 'bg-[#1F564C] text-white'
-                          : 'text-[#5A6561] hover:text-[#1E2926]'
+                          ? 'bg-[#0E7A5F] text-white'
+                          : 'text-[#475467] hover:text-[#101828]'
                       }`}
                     >
                       Documento
@@ -987,18 +987,18 @@ export function NewEmployeeOcrModal({
                       onClick={() => setDocTab('raw')}
                       className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                         docTab === 'raw'
-                          ? 'bg-[#1F564C] text-white'
-                          : 'text-[#5A6561] hover:text-[#1E2926]'
+                          ? 'bg-[#0E7A5F] text-white'
+                          : 'text-[#475467] hover:text-[#101828]'
                       }`}
                     >
                       Texto lido (OCR)
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[10.5px] text-[#5A6561]">
+                  <div className="flex items-center gap-2 text-[10.5px] text-[#475467]">
                     <span
                       title={`SHA-256: ${currentItem.doc.sha256Hash}`}
-                      className="inline-flex items-center gap-1 rounded bg-[#EEF6F3] px-2 py-0.5 font-mono text-[9.5px] font-semibold text-[#1F564C]"
+                      className="inline-flex items-center gap-1 rounded bg-[#ECF8F3] px-2 py-0.5 font-mono text-[9.5px] font-semibold text-[#0E7A5F]"
                     >
                       <ShieldCheck className="h-3 w-3" aria-hidden="true" />
                       SHA-256: {currentItem.doc.sha256Hash.slice(0, 10)}…
@@ -1006,7 +1006,7 @@ export function NewEmployeeOcrModal({
                     <button
                       type="button"
                       onClick={handleOpenOriginalDocument}
-                      className="inline-flex items-center gap-1 rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[10.5px] font-semibold text-[#1E2926] hover:border-[#1F564C] hover:text-[#1F564C]"
+                      className="inline-flex items-center gap-1 rounded border border-[#E4E7EC] bg-white px-2 py-1 text-[10.5px] font-semibold text-[#101828] hover:border-[#0E7A5F] hover:text-[#0E7A5F]"
                     >
                       <ExternalLink className="h-3 w-3" aria-hidden="true" />
                       <span>Abrir original</span>
@@ -1028,9 +1028,9 @@ export function NewEmployeeOcrModal({
                   className="min-h-0 flex-1 overflow-y-auto p-4"
                 >
                   {docTab === 'raw' ? (
-                    <div className="rounded-xl border border-[#D8D1C5] bg-white p-4 shadow-sm">
-                      <div className="mb-2 flex items-center justify-between border-b border-[#EFECE6] pb-2 text-[10.5px] text-[#5A6561]">
-                        <span className="font-bold text-[#1E2926]">
+                    <div className="rounded-xl border border-[#E4E7EC] bg-white p-4 shadow-sm">
+                      <div className="mb-2 flex items-center justify-between border-b border-[#F2F4F7] pb-2 text-[10.5px] text-[#475467]">
+                        <span className="font-semibold text-[#101828]">
                           Texto Integral Extraído ({currentItem.doc.method})
                         </span>
                         <span>
@@ -1039,7 +1039,7 @@ export function NewEmployeeOcrModal({
                         </span>
                       </div>
                       <pre
-                        className="whitespace-pre-wrap break-words font-mono text-[11.5px] leading-relaxed text-[#1E2926]"
+                        className="whitespace-pre-wrap break-words font-mono text-[11.5px] leading-relaxed text-[#101828]"
                         dangerouslySetInnerHTML={{
                           __html: renderHighlightedHtml(
                             currentItem.doc.text ||
@@ -1057,20 +1057,20 @@ export function NewEmployeeOcrModal({
                     <div className="space-y-4">
                       {/* 1. Preview Visual de Imagem / Foto / PDF Escaneado */}
                       {currentItem.doc.previewImageUrl && (
-                        <div className="rounded-xl border border-[#D8D1C5] bg-white p-3 shadow-sm">
-                          <div className="mb-2 flex items-center justify-between gap-2 text-[12px] font-semibold text-[#5A6561]">
+                        <div className="rounded-xl border border-[#E4E7EC] bg-white p-3 shadow-sm">
+                          <div className="mb-2 flex items-center justify-between gap-2 text-[12px] font-semibold text-[#475467]">
                             <span className="min-w-0 truncate">
                               Imagem Original do Documento ({currentItem.doc.name})
                             </span>
                             <div className="flex shrink-0 items-center gap-1">
-                              <span className="mr-1 rounded bg-[#FDF7EC] px-2 py-0.5 text-[10.5px] font-bold text-[#C26D27]">
+                              <span className="mr-1 rounded bg-[#FDF7EC] px-2 py-0.5 text-[10.5px] font-semibold text-[#C26D27]">
                                 {currentItem.doc.method}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => setPreviewZoom((z) => Math.max(1, +(z - 0.25).toFixed(2)))}
                                 disabled={previewZoom <= 1}
-                                className="rounded-md border border-[#D8D1C5] p-1 text-[#1E2926] hover:bg-[#F5F3EE] disabled:opacity-40"
+                                className="rounded-md border border-[#E4E7EC] p-1 text-[#101828] hover:bg-[#F6F7F9] disabled:opacity-40"
                                 aria-label="Diminuir zoom da imagem"
                                 title="Diminuir zoom"
                               >
@@ -1079,7 +1079,7 @@ export function NewEmployeeOcrModal({
                               <button
                                 type="button"
                                 onClick={() => setPreviewZoom(1)}
-                                className="min-w-[52px] rounded-md border border-[#D8D1C5] px-1.5 py-0.5 text-[11px] font-bold text-[#1E2926] hover:bg-[#F5F3EE]"
+                                className="min-w-[52px] rounded-md border border-[#E4E7EC] px-1.5 py-0.5 text-[11px] font-semibold text-[#101828] hover:bg-[#F6F7F9]"
                                 title="Ajustar à largura da coluna"
                               >
                                 {Math.round(previewZoom * 100)}%
@@ -1088,7 +1088,7 @@ export function NewEmployeeOcrModal({
                                 type="button"
                                 onClick={() => setPreviewZoom((z) => Math.min(3, +(z + 0.25).toFixed(2)))}
                                 disabled={previewZoom >= 3}
-                                className="rounded-md border border-[#D8D1C5] p-1 text-[#1E2926] hover:bg-[#F5F3EE] disabled:opacity-40"
+                                className="rounded-md border border-[#E4E7EC] p-1 text-[#101828] hover:bg-[#F6F7F9] disabled:opacity-40"
                                 aria-label="Aumentar zoom da imagem"
                                 title="Aumentar zoom"
                               >
@@ -1096,7 +1096,7 @@ export function NewEmployeeOcrModal({
                               </button>
                             </div>
                           </div>
-                          <div className="max-h-[calc(78vh/var(--ui-zoom))] overflow-auto rounded-lg border border-[#EFECE6] bg-[#F5F3EE]">
+                          <div className="max-h-[calc(78vh/var(--ui-zoom))] overflow-auto rounded-lg border border-[#F2F4F7] bg-[#F6F7F9]">
                             <img
                               src={currentItem.doc.previewImageUrl}
                               alt={currentItem.doc.name}
@@ -1112,9 +1112,9 @@ export function NewEmployeeOcrModal({
                       {/* 2. Renderizador de Conversa de WhatsApp */}
                       {currentItem.doc.channel === 'whatsapp' &&
                       parseWhatsApp(currentItem.doc.text ?? '').length >= 2 ? (
-                        <div className="rounded-xl border border-[#D8D1C5] bg-[#ECE5DD] p-4 shadow-sm">
+                        <div className="rounded-xl border border-[#E4E7EC] bg-[#F2F4F7] p-4 shadow-sm">
                           <div className="mb-3 flex items-center justify-between rounded-lg bg-[#075E54] px-3 py-2 text-white">
-                            <span className="text-[12px] font-bold">
+                            <span className="text-[12px] font-semibold">
                               WhatsApp • Coordenação do Cuidado SESI
                             </span>
                             <span className="text-[10px] opacity-80">
@@ -1132,11 +1132,11 @@ export function NewEmployeeOcrModal({
                                   key={i}
                                   className={`max-w-[88%] rounded-xl px-3 py-2 text-[11.5px] shadow-sm ${
                                     isStaff
-                                      ? 'mr-auto bg-white text-[#1E2926]'
-                                      : 'ml-auto bg-[#DCF8C6] text-[#1E2926]'
+                                      ? 'mr-auto bg-white text-[#101828]'
+                                      : 'ml-auto bg-[#DCF8C6] text-[#101828]'
                                   }`}
                                 >
-                                  <div className="mb-0.5 text-[10px] font-bold text-[#1F564C]">
+                                  <div className="mb-0.5 text-[10px] font-semibold text-[#0E7A5F]">
                                     {msg.sender}
                                   </div>
                                   <div
@@ -1148,7 +1148,7 @@ export function NewEmployeeOcrModal({
                                       ),
                                     }}
                                   />
-                                  <div className="mt-1 text-right text-[9.5px] text-[#5A6561]">
+                                  <div className="mt-1 text-right text-[9.5px] text-[#475467]">
                                     {msg.date.toLocaleDateString('pt-BR')}{' '}
                                     {String(msg.date.getHours()).padStart(2, '0')}:
                                     {String(msg.date.getMinutes()).padStart(2, '0')}
@@ -1160,24 +1160,24 @@ export function NewEmployeeOcrModal({
                         </div>
                       ) : currentItem.record ? (
                         /* 3. Renderizador de Registro Estruturado (XML, JSON, CSV) */
-                        <div className="rounded-xl border border-[#D8D1C5] bg-white p-4 shadow-sm">
-                          <div className="mb-3 flex items-center justify-between border-b border-[#EFECE6] pb-2">
-                            <span className="text-[12px] font-bold text-[#1E2926]">
+                        <div className="rounded-xl border border-[#E4E7EC] bg-white p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between border-b border-[#F2F4F7] pb-2">
+                            <span className="text-[12px] font-semibold text-[#101828]">
                               Registro Estruturado ({currentItem.doc.method}) —{' '}
                               {currentItem.doc.name}
                             </span>
                           </div>
-                          <dl className="divide-y divide-[#EFECE6] text-[11.5px]">
+                          <dl className="divide-y divide-[#F2F4F7] text-[11.5px]">
                             {currentItem.record.map(([k, v], i) => (
                               <div
                                 key={i}
                                 className="grid grid-cols-12 gap-2 py-1.5"
                               >
-                                <dt className="col-span-5 font-mono text-[10.5px] font-semibold text-[#5A6561]">
+                                <dt className="col-span-5 font-mono text-[10.5px] font-semibold text-[#475467]">
                                   {k}
                                 </dt>
                                 <dd
-                                  className="col-span-7 font-medium text-[#1E2926]"
+                                  className="col-span-7 font-medium text-[#101828]"
                                   dangerouslySetInnerHTML={{
                                     __html: renderHighlightedHtml(
                                       v,
@@ -1191,22 +1191,22 @@ export function NewEmployeeOcrModal({
                         </div>
                       ) : (
                         /* 4. Folha de Documento Clínico / Ficha S+ / E-mail com Destaque de Evidência */
-                        <div className="mx-auto max-w-[680px] rounded-xl border border-[#D8D1C5] bg-white p-5 shadow-md">
-                          <div className="mb-3 flex items-center justify-between border-b-2 border-[#1F564C] pb-2.5">
+                        <div className="mx-auto max-w-[680px] rounded-xl border border-[#E4E7EC] bg-white p-5 shadow-md">
+                          <div className="mb-3 flex items-center justify-between border-b-2 border-[#0E7A5F] pb-2.5">
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                                 {KIND_LABEL[currentItem.extraction.kind]} • SESI Saúde Acolhe
                               </span>
-                              <h3 className="text-[13px] font-bold text-[#1E2926]">
+                              <h3 className="text-[13px] font-semibold text-[#101828]">
                                 {currentItem.doc.name}
                               </h3>
                             </div>
-                            <span className="rounded-md bg-[#F2EFE8] px-2 py-1 text-[10px] font-semibold text-[#5A6561]">
+                            <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-[10px] font-semibold text-[#475467]">
                               {currentItem.doc.method}
                             </span>
                           </div>
                           <div
-                            className="whitespace-pre-wrap font-sans text-[12px] leading-relaxed text-[#1E2926]"
+                            className="whitespace-pre-wrap font-sans text-[12px] leading-relaxed text-[#101828]"
                             dangerouslySetInnerHTML={{
                               __html: renderHighlightedHtml(
                                 currentItem.doc.text ?? '',
@@ -1221,7 +1221,7 @@ export function NewEmployeeOcrModal({
                 </div>
               </>
             ) : (
-              <div className="flex flex-1 items-center justify-center p-8 text-center text-[12px] text-[#5A6561]">
+              <div className="flex flex-1 items-center justify-center p-8 text-center text-[12px] text-[#475467]">
                 Selecione um documento na barra lateral esquerda para visualizá-lo no centro.
               </div>
             )}
@@ -1234,21 +1234,21 @@ export function NewEmployeeOcrModal({
             {currentItem ? (
               <>
                 {/* Cabeçalho de Identificação da Pessoa (Vínculo na Planilha ou Novo Cadastro) */}
-                <div className="shrink-0 border-b border-[#DED9CE] bg-[#FAF9F6] p-3.5">
+                <div className="shrink-0 border-b border-[#E4E7EC] bg-[#F9FAFB] p-3.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                         {currentItem.isNewEmployeeMode
                           ? 'Modo: Cadastrar Novo Funcionário na Planilha'
                           : `Funcionário Encontrado (${currentItem.matchHow})`}
                       </span>
-                      <h3 className="truncate text-[13.5px] font-bold text-[#1E2926]">
+                      <h3 className="truncate text-[13.5px] font-semibold text-[#101828]">
                         {matchedEmp
                           ? matchedEmp.name
                           : currentItem.fields.find((f) => f.key === 'nome')?.value ||
                             'Novo Colaborador'}
                       </h3>
-                      <p className="text-[11px] text-[#5A6561]">
+                      <p className="text-[11px] text-[#475467]">
                         {matchedEmp ? (
                           <>
                             Matrícula <strong>{matchedEmp.matricula}</strong> ·{' '}
@@ -1266,7 +1266,7 @@ export function NewEmployeeOcrModal({
                       <button
                         type="button"
                         onClick={() => setShowPersonSwap((v) => !v)}
-                        className="rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                        className="rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#101828] hover:border-[#0E7A5F]"
                       >
                         {showPersonSwap ? 'Fechar busca' : 'Trocar vínculo'}
                       </button>
@@ -1274,7 +1274,7 @@ export function NewEmployeeOcrModal({
                         <button
                           type="button"
                           onClick={handleSwitchToNewEmployeeMode}
-                          className="rounded-lg border border-[#1F564C]/30 bg-[#EEF6F3] px-2.5 py-1 text-[10.5px] font-semibold text-[#1F564C] hover:bg-[#1F564C] hover:text-white"
+                          className="rounded-lg border border-[#0E7A5F]/30 bg-[#ECF8F3] px-2.5 py-1 text-[10.5px] font-semibold text-[#0E7A5F] hover:bg-[#0E7A5F] hover:text-white"
                         >
                           + Novo Cadastro
                         </button>
@@ -1284,19 +1284,19 @@ export function NewEmployeeOcrModal({
 
                   {/* Caixa de Troca de Pessoa / Modo Novo Cadastro */}
                   {showPersonSwap && (
-                    <div className="mt-2.5 rounded-xl border border-[#DCD7CC] bg-white p-2.5 shadow-sm">
+                    <div className="mt-2.5 rounded-xl border border-[#E4E7EC] bg-white p-2.5 shadow-sm">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <input
                           type="search"
                           value={personSearch}
                           onChange={(e) => setPersonSearch(e.target.value)}
                           placeholder="Buscar funcionário na planilha por nome ou matrícula..."
-                          className="w-full rounded-lg border border-[#DCD7CC] px-2.5 py-1 text-[11px] text-[#1E2926] focus:border-[#1F564C] focus:outline-none"
+                          className="w-full rounded-lg border border-[#E4E7EC] px-2.5 py-1 text-[11px] text-[#101828] focus:border-[#0E7A5F] focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={handleSwitchToNewEmployeeMode}
-                          className="shrink-0 rounded-lg bg-[#1F564C] px-2.5 py-1 text-[10.5px] font-semibold text-white"
+                          className="shrink-0 rounded-lg bg-[#0E7A5F] px-2.5 py-1 text-[10.5px] font-semibold text-white"
                         >
                           Criar como Novo
                         </button>
@@ -1307,12 +1307,12 @@ export function NewEmployeeOcrModal({
                             <button
                               type="button"
                               onClick={() => handleAssignExistingEmployee(emp)}
-                              className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[11px] hover:bg-[#EEF6F3]"
+                              className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[11px] hover:bg-[#ECF8F3]"
                             >
-                              <span className="font-semibold text-[#1E2926]">
+                              <span className="font-semibold text-[#101828]">
                                 {emp.name}
                               </span>
-                              <span className="text-[10px] text-[#5A6561]">
+                              <span className="text-[10px] text-[#475467]">
                                 Mat. {emp.matricula} · {emp.companyName}
                               </span>
                             </button>
@@ -1326,20 +1326,20 @@ export function NewEmployeeOcrModal({
                 {/* Lista Editável de Campos Extraídos do Documento (agrupada, em 2 colunas) */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   {/* Resumo do que o documento muda na planilha */}
-                  <div className="flex flex-wrap items-center gap-1.5 border-b border-[#EFECE6] px-3.5 py-2 text-[10.5px] text-[#5A6561]">
-                    <span className="font-semibold text-[#1E2926]">
+                  <div className="flex flex-wrap items-center gap-1.5 border-b border-[#F2F4F7] px-3.5 py-2 text-[10.5px] text-[#475467]">
+                    <span className="font-semibold text-[#101828]">
                       {currentItem.fields.length} campos lidos:
                     </span>
-                    <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 font-bold text-[#1F564C]">
+                    <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 font-semibold text-[#0E7A5F]">
                       {fieldStats.new} novos
                     </span>
                     {fieldStats.changed > 0 && (
-                      <span className="rounded bg-[#FDF7EC] px-1.5 py-0.5 font-bold text-[#C26D27]">
+                      <span className="rounded bg-[#FDF7EC] px-1.5 py-0.5 font-semibold text-[#C26D27]">
                         {fieldStats.changed} mudam
                       </span>
                     )}
                     {fieldStats.same > 0 && (
-                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-bold text-[#64748B]">
+                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-semibold text-[#64748B]">
                         {fieldStats.same} iguais
                       </span>
                     )}
@@ -1350,13 +1350,13 @@ export function NewEmployeeOcrModal({
 
                   {/* Bloco 1: Campos Cadastrais / Não-Médicos do Funcionário */}
                   {(registrationFields.length > 0 || currentItem.isNewEmployeeMode) && (
-                    <section className="border-b border-[#EFECE6]">
-                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EFECE6] bg-white/95 px-3.5 py-2 backdrop-blur">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
+                    <section className="border-b border-[#F2F4F7]">
+                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#F2F4F7] bg-white/95 px-3.5 py-2 backdrop-blur">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                           <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
                           1. Dados cadastrais
                         </span>
-                        <span className="text-[10px] font-semibold text-[#5A6561]">
+                        <span className="text-[10px] font-semibold text-[#475467]">
                           Colunas 1 a 11 · {registrationFields.length} campos
                         </span>
                       </h4>
@@ -1367,15 +1367,15 @@ export function NewEmployeeOcrModal({
                           if (!groupFields.length && !showExtra) return null;
                           return (
                             <fieldset key={group.title}>
-                              <legend className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5A6561]">
+                              <legend className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#475467]">
                                 {group.title}
                               </legend>
                               <div className="grid grid-cols-2 items-start gap-2">
                                 {groupFields.map(renderFieldCell)}
                                 {showExtra && (
                                   <>
-                                    <label className="col-span-2 rounded-lg border border-[#E5E0D5] bg-white p-2">
-                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                    <label className="col-span-2 rounded-lg border border-[#EAECF0] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-semibold text-[#101828]">
                                         Setor industrial
                                       </span>
                                       <input
@@ -1390,8 +1390,8 @@ export function NewEmployeeOcrModal({
                                         className={FIELD_CONTROL_CLASS}
                                       />
                                     </label>
-                                    <label className="rounded-lg border border-[#E5E0D5] bg-white p-2">
-                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                    <label className="rounded-lg border border-[#EAECF0] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-semibold text-[#101828]">
                                         Cargo / função
                                       </span>
                                       <input
@@ -1406,8 +1406,8 @@ export function NewEmployeeOcrModal({
                                         className={FIELD_CONTROL_CLASS}
                                       />
                                     </label>
-                                    <label className="rounded-lg border border-[#E5E0D5] bg-white p-2">
-                                      <span className="mb-1 block text-[11px] font-bold text-[#1E2926]">
+                                    <label className="rounded-lg border border-[#EAECF0] bg-white p-2">
+                                      <span className="mb-1 block text-[11px] font-semibold text-[#101828]">
                                         Turno
                                       </span>
                                       <select
@@ -1440,13 +1440,13 @@ export function NewEmployeeOcrModal({
 
                   {/* Bloco 2: Campos de Coordenação do Cuidado da Planilha SESI */}
                   {coordinationFields.length > 0 && (
-                    <section className="border-b border-[#EFECE6]">
-                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EFECE6] bg-white/95 px-3.5 py-2 backdrop-blur">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
+                    <section className="border-b border-[#F2F4F7]">
+                      <h4 className="sticky top-0 z-10 flex items-center justify-between border-b border-[#F2F4F7] bg-white/95 px-3.5 py-2 backdrop-blur">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                           <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
                           2. Coordenação do cuidado
                         </span>
-                        <span className="text-[10px] font-semibold text-[#5A6561]">
+                        <span className="text-[10px] font-semibold text-[#475467]">
                           Colunas 12 a 32 · {coordinationFields.length} campos
                         </span>
                       </h4>
@@ -1456,7 +1456,7 @@ export function NewEmployeeOcrModal({
                           if (!groupFields.length) return null;
                           return (
                             <fieldset key={group.title}>
-                              <legend className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5A6561]">
+                              <legend className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#475467]">
                                 {group.title}
                               </legend>
                               <div className="grid grid-cols-2 items-start gap-2">{groupFields.map(renderFieldCell)}</div>
@@ -1469,8 +1469,8 @@ export function NewEmployeeOcrModal({
 
                   {/* Seções Clínicas Lidas no Documento que Ficam Só no Prontuário (Fora da Planilha) */}
                   {currentItem.extraction.ignored.length > 0 && (
-                    <details className="m-3.5 rounded-xl border border-[#DCD7CC] bg-[#FAF9F6] p-3 text-[11px] text-[#5A6561]">
-                      <summary className="cursor-pointer font-bold text-[#1E2926]">
+                    <details className="m-3.5 rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] p-3 text-[11px] text-[#475467]">
+                      <summary className="cursor-pointer font-semibold text-[#101828]">
                         No documento, mas restrito ao prontuário ({currentItem.extraction.ignored.length})
                       </summary>
                       <p className="mt-1 text-[10.5px]">
@@ -1486,13 +1486,13 @@ export function NewEmployeeOcrModal({
                 </div>
 
                 {/* Rodapé de Ações da Coluna Direita (Pular, Desfazer, Salvar, Salvar Todos) */}
-                <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-[#DED9CE] bg-[#FAF9F6] px-3.5 py-2.5">
+                <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-[#E4E7EC] bg-[#F9FAFB] px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5">
                     {currentItem.status === 'pend' ? (
                       <button
                         type="button"
                         onClick={handleSkipCurrentItem}
-                        className="rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#5A6561] hover:border-[#1E2926] hover:text-[#1E2926]"
+                        className="rounded-lg border border-[#E4E7EC] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#475467] hover:border-[#101828] hover:text-[#101828]"
                       >
                         Pular
                       </button>
@@ -1500,7 +1500,7 @@ export function NewEmployeeOcrModal({
                       <button
                         type="button"
                         onClick={handleUndoCurrentItem}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#1E2926]"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[#E4E7EC] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#101828]"
                       >
                         <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>Desfazer ({currentItem.status === 'ok' ? 'Salvo' : 'Pulado'})</span>
@@ -1513,7 +1513,7 @@ export function NewEmployeeOcrModal({
                       <button
                         type="button"
                         onClick={handleSaveAllPending}
-                        className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C] bg-[#EEF6F3] px-3 py-1.5 text-[11.5px] font-bold text-[#1F564C] hover:bg-[#1F564C] hover:text-white"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[#0E7A5F] bg-[#ECF8F3] px-3 py-1.5 text-[11.5px] font-semibold text-[#0E7A5F] hover:bg-[#0E7A5F] hover:text-white"
                       >
                         <Layers className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>Salvar todos ({stats.pending})</span>
@@ -1524,7 +1524,7 @@ export function NewEmployeeOcrModal({
                       <button
                         type="button"
                         onClick={handleSaveCurrentItem}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#1F564C] px-4 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#163F37]"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0E7A5F] px-4 py-1.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0B5F4A]"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>
@@ -1538,7 +1538,7 @@ export function NewEmployeeOcrModal({
                 </footer>
               </>
             ) : (
-              <div className="flex flex-1 items-center justify-center p-6 text-center text-[12px] text-[#5A6561]">
+              <div className="flex flex-1 items-center justify-center p-6 text-center text-[12px] text-[#475467]">
                 Nenhum item selecionado para revisão.
               </div>
             )}

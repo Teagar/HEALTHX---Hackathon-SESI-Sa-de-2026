@@ -611,7 +611,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-[calc(100vh/var(--ui-zoom))] w-full flex-col overflow-hidden bg-[#F5F3EE] text-[#1E2926]">
+    <div className="flex h-[calc(100vh/var(--ui-zoom))] w-full flex-col overflow-hidden bg-[#F6F7F9] text-[#101828]">
       <TopBar
         employees={employees}
         currentRoute={currentRoute}
@@ -623,7 +623,7 @@ export function App() {
       />
 
       {currentRoute === '/home' && (
-        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#E2DDD3]">
+        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#F5F6F8]">
           <SidebarTree
             employees={employees}
             selectedEmployeeId={selectedEmployeeId}
@@ -702,8 +702,8 @@ const TOAST_TONES: Record<
   { className: string; icon: typeof CheckCircle2; accentClassName: string }
 > = {
   success: {
-    className: 'border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]',
-    accentClassName: 'bg-[#1F564C]',
+    className: 'border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]',
+    accentClassName: 'bg-[#0E7A5F]',
     icon: CheckCircle2,
   },
   info: {
@@ -733,7 +733,7 @@ function ToastCard({ toast, onDismiss }: ToastCardProps) {
       <div className="flex items-start gap-2 py-2.5 pl-3.5 pr-2.5">
         <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold leading-tight">{toast.title}</p>
+          <p className="text-[11px] font-semibold leading-tight">{toast.title}</p>
           {toast.message && (
             <p className="mt-0.5 break-words text-[10px] leading-snug opacity-90">
               {toast.message}

@@ -63,39 +63,54 @@ export function LandingPortal({
   activeEmployees,
   companiesCount,
 }: LandingPortalProps) {
+  const stats = [
+    { value: activeEmployees, label: 'vidas ativas' },
+    { value: totalEmployees, label: 'vínculos cadastrados' },
+    { value: companiesCount, label: 'empresas contratantes' },
+  ];
+
   return (
-    <div className="min-h-[calc(100vh/var(--ui-zoom))] w-full overflow-y-auto bg-[#E2DDD3] text-[#1E2926]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14">
-        <header className="flex flex-col items-start gap-3">
+    <div className="relative min-h-[calc(100vh/var(--ui-zoom))] w-full overflow-y-auto bg-[#F5F6F8] text-[#101828]">
+      {/* Brilho suave no topo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,#E3F4EC_0%,rgba(245,246,248,0)_100%)]"
+      />
+
+      <div className="relative mx-auto flex min-h-[calc(100vh/var(--ui-zoom))] max-w-6xl flex-col justify-center gap-12 px-5 py-12 sm:px-8">
+        <header className="flex flex-col items-center gap-5 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#E4E7EC] bg-white px-3 py-1 text-[11px] font-medium text-[#475467] shadow-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0E7A5F]" />
+            SESI Saúde Acolhe · Atenção Primária Corporativa
+          </span>
+
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1F564C] text-white">
-              <Stethoscope className="h-5 w-5" aria-hidden="true" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0E7A5F] text-white shadow-md">
+              <Stethoscope className="h-6 w-6" aria-hidden="true" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">SESILITA</h1>
-              <p className="text-[12px] text-[#5A6561]">
-                Coordenação do Cuidado do SESI Saúde Acolhe · Atenção Primária Corporativa
-              </p>
-            </div>
+            <h1 className="text-[34px] font-semibold leading-none tracking-tight sm:text-[40px]">
+              SESILITA
+            </h1>
           </div>
-          <p className="max-w-2xl text-[13px] leading-relaxed text-[#5A6561]">
-            Selecione o ambiente de acesso. Cada perfil enxerga apenas as informações compatíveis
-            com sua função — os dados clínicos permanecem restritos à Equipe de Saúde.
+
+          <p className="max-w-xl text-[14.5px] leading-relaxed text-[#475467]">
+            Coordenação do cuidado sem planilha manual. Escolha seu ambiente: cada perfil vê só o
+            que precisa, e os dados clínicos ficam restritos à Equipe de Saúde.
           </p>
-          <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
-            <span className="rounded-full border border-[#C6E4DA] bg-[#EEF6F3] px-3 py-1 text-[#1F564C]">
-              {activeEmployees} vidas ativas
-            </span>
-            <span className="rounded-full border border-[#D5CFC3] bg-[#FAF9F6] px-3 py-1 text-[#5A6561]">
-              {totalEmployees} vínculos cadastrados
-            </span>
-            <span className="rounded-full border border-[#D5CFC3] bg-[#FAF9F6] px-3 py-1 text-[#5A6561]">
-              {companiesCount} empresas contratantes
-            </span>
-          </div>
+
+          <dl className="mt-1 flex flex-wrap items-center justify-center divide-x divide-[#EAECF0] rounded-2xl border border-[#EAECF0] bg-white shadow-xs">
+            {stats.map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center px-6 py-3">
+                <dt className="order-2 text-[11px] text-[#475467]">{stat.label}</dt>
+                <dd className="order-1 text-[20px] font-semibold tracking-tight text-[#101828]">
+                  {stat.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </header>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {CARDS.map((card) => {
             const Icon = card.icon;
             return (
@@ -103,39 +118,44 @@ export function LandingPortal({
                 key={card.route}
                 type="button"
                 onClick={() => onNavigate(card.route)}
-                className="group flex flex-col justify-between gap-5 rounded-2xl border border-[#D5CFC3] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1F564C] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1F564C]/30"
+                className="group flex flex-col gap-5 rounded-2xl border border-[#EAECF0] bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#C7EADC] hover:shadow-lg"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEF6F3] text-[#1F564C]">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="rounded-md bg-[#F2EFE8] px-2 py-0.5 font-mono text-[10.5px] font-semibold text-[#5A6561]">
-                      {card.route}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-bold">{card.title}</h2>
-                    <p className="text-[11px] font-medium text-[#1F564C]">{card.audience}</p>
-                  </div>
-                  <p className="text-[12px] leading-relaxed text-[#5A6561]">{card.description}</p>
-                  <ul className="space-y-1 text-[11.5px] text-[#1E2926]">
-                    {card.bullets.map((b) => (
-                      <li key={b} className="flex gap-1.5">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1F564C]" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#ECF8F3] text-[#0E7A5F] transition-colors group-hover:bg-[#0E7A5F] group-hover:text-white">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+
+                <div className="space-y-1.5">
+                  <h2 className="text-[16px] font-semibold tracking-tight">{card.title}</h2>
+                  <p className="text-[11.5px] font-medium text-[#0E7A5F]">{card.audience}</p>
+                  <p className="pt-1 text-[12.5px] leading-relaxed text-[#475467]">
+                    {card.description}
+                  </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 self-start rounded-lg bg-[#1F564C] px-3.5 py-2 text-[12px] font-semibold text-white transition-colors group-hover:bg-[#163F37]">
+
+                <ul className="space-y-2 border-t border-[#F2F4F7] pt-4 text-[12px] text-[#344054]">
+                  {card.bullets.map((b) => (
+                    <li key={b} className="flex gap-2">
+                      <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[#0E7A5F]" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <span className="mt-auto inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#0E7A5F]">
                   Acessar
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
                 </span>
               </button>
             );
           })}
         </div>
+
+        <p className="text-center text-[11px] text-[#98A2B3]">
+          Demonstração do Hackathon SESI Saúde 2026 · todos os dados são fictícios
+        </p>
       </div>
     </div>
   );

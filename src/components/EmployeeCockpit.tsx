@@ -79,16 +79,16 @@ const RISK_LABELS: Record<RiskLevel, string> = {
 
 const RISK_SELECT_CLASSES: Record<RiskLevel, string> = {
   0: 'border-[#CBD5E1] bg-[#F8FAFC] text-[#475569]',
-  1: 'border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]',
+  1: 'border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]',
   2: 'border-[#FDE68A] bg-[#FEFCE8] text-[#A16207]',
   3: 'border-[#F5DFB8] bg-[#FDF7EC] text-[#C26D27]',
   4: 'border-[#F5C6BC] bg-[#FDF2F0] text-[#C84B31]',
 };
 
 const FIELD_CLASS =
-  'w-full rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[12px] text-[#1E2926] placeholder:text-[#9AA29E] focus:border-[#1F564C] focus:outline-none focus:ring-2 focus:ring-[#1F564C]/15';
+  'w-full rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-1.5 text-[12px] text-[#101828] placeholder:text-[#98A2B3] focus:border-[#0E7A5F] focus:outline-none focus:ring-2 focus:ring-[#0E7A5F]/15';
 const LABEL_CLASS =
-  'mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#5A6561]';
+  'mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#475467]';
 
 const PRONTUARIO_SAMPLE_DOCUMENTS = [
   {
@@ -176,7 +176,7 @@ function highlightProntuarioHtml(rawText: string, activeEvidence: string): strin
         html = html.replace(
           re,
           (m) =>
-            `<mark class="rounded bg-[#FDE68A] px-1 py-0.5 font-semibold text-[#1E2926] ring-2 ring-[#F59E0B]/40">${m}</mark>`
+            `<mark class="rounded bg-[#FDE68A] px-1 py-0.5 font-semibold text-[#101828] ring-2 ring-[#F59E0B]/40">${m}</mark>`
         );
         break;
       }
@@ -501,9 +501,9 @@ export function EmployeeCockpit({
     currentProntuarioItem?.fields.find((f) => f.key === activeProntuarioField) ?? null;
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#DED9CE] bg-white shadow-sm">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#E4E7EC] bg-white shadow-sm">
       {/* Barra Superior Minimalista da Ficha (60px) */}
-      <header className="flex min-h-[60px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#E6E2D8] bg-[#FAF9F6] px-4 py-2.5">
+      <header className="flex min-h-[60px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#EAECF0] bg-[#F9FAFB] px-4 py-2.5">
         <div className="min-w-[220px] flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -511,44 +511,44 @@ export function EmployeeCockpit({
               value={draft.name}
               onChange={(event) => update('name', event.target.value)}
               aria-label="Nome do funcionário"
-              className="min-w-[180px] flex-1 rounded border-b border-transparent bg-transparent px-1 py-0.5 text-[15px] font-bold text-[#1E2926] focus:border-[#1F564C] focus:bg-white focus:outline-none"
+              className="min-w-[180px] flex-1 rounded border-b border-transparent bg-transparent px-1 py-0.5 text-[15px] font-semibold text-[#101828] focus:border-[#0E7A5F] focus:bg-white focus:outline-none"
             />
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
                 draft.status === 'INATIVO'
                   ? 'bg-[#F1F5F9] text-[#64748B]'
-                  : 'bg-[#EEF6F3] text-[#1F564C]'
+                  : 'bg-[#ECF8F3] text-[#0E7A5F]'
               }`}
             >
               {draft.status || 'ATIVO'}
             </span>
             {isPendingFirstVisit && draft.status !== 'INATIVO' && (
-              <span className="rounded-full border border-[#F5C6BC] bg-[#FDF2F0] px-2 py-0.5 text-[10px] font-bold text-[#C84B31]">
+              <span className="rounded-full border border-[#F5C6BC] bg-[#FDF2F0] px-2 py-0.5 text-[10px] font-semibold text-[#C84B31]">
                 Busca Ativa • 1ª Consulta
               </span>
             )}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#5A6561]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#475467]">
             <span>Mat. {draft.matricula}</span>
             <span>•</span>
             <span>CPF {draft.cpf}</span>
             <span>•</span>
-            <span className="font-medium text-[#1E2926]">{draft.companyName}</span>
+            <span className="font-medium text-[#101828]">{draft.companyName}</span>
             <span>•</span>
-            <span className="font-medium text-[#1F564C]">{draft.referenceDoctor}</span>
+            <span className="font-medium text-[#0E7A5F]">{draft.referenceDoctor}</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-1.5">
-            <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-[#5A6561] sm:inline">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-[#475467] sm:inline">
               Risco Atual
             </span>
             <select
               value={draft.riskLevel}
               onChange={(event) => handleRiskChange(Number(event.target.value) as RiskLevel)}
               aria-label="Classificação de Risco"
-              className={`rounded-lg border px-2.5 py-1.5 text-[11.5px] font-bold focus:outline-none ${
+              className={`rounded-lg border px-2.5 py-1.5 text-[11.5px] font-semibold focus:outline-none ${
                 RISK_SELECT_CLASSES[draft.riskLevel]
               }`}
             >
@@ -565,8 +565,8 @@ export function EmployeeCockpit({
             onClick={handleSave}
             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11.5px] font-semibold transition-colors ${
               dirty
-                ? 'border-[#1F564C] bg-[#1F564C] text-white shadow-sm hover:bg-[#163F37]'
-                : 'border-[#DCD7CC] bg-white text-[#1E2926] hover:border-[#1F564C] hover:text-[#1F564C]'
+                ? 'border-[#0E7A5F] bg-[#0E7A5F] text-white shadow-sm hover:bg-[#0B5F4A]'
+                : 'border-[#E4E7EC] bg-white text-[#101828] hover:border-[#0E7A5F] hover:text-[#0E7A5F]'
             }`}
           >
             <Save className="h-3.5 w-3.5" aria-hidden="true" />
@@ -579,8 +579,8 @@ export function EmployeeCockpit({
             disabled={sent}
             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11.5px] font-semibold transition-colors ${
               sent
-                ? 'cursor-default border-[#C6E4DA] bg-[#EEF6F3] text-[#1F564C]'
-                : 'border-[#1F564C] bg-white text-[#1F564C] hover:bg-[#EEF6F3]'
+                ? 'cursor-default border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]'
+                : 'border-[#0E7A5F] bg-white text-[#0E7A5F] hover:bg-[#ECF8F3]'
             }`}
           >
             {sent ? (
@@ -597,7 +597,7 @@ export function EmployeeCockpit({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-[#5A6561] transition-colors hover:border-[#C84B31] hover:text-[#C84B31]"
+            className="inline-flex items-center gap-1 rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-[#475467] transition-colors hover:border-[#C84B31] hover:text-[#C84B31]"
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
             Fechar Ficha
@@ -606,12 +606,12 @@ export function EmployeeCockpit({
       </header>
 
       {/* Corpo Principal em 2 Colunas Simultâneas (7/12 Esquerda e 5/12 Direita) */}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#F6F4EE] p-3 sm:p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[#F6F7F9] p-3 sm:p-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* COLUNA ESQUERDA (7/12): Identificação, Equipe Multiprofissional, Gestão do Cuidado + PCI */}
           <div className="min-w-0 space-y-4 lg:col-span-7">
             {/* Bloco 1: Identificação, Vínculo e Atendimento Multiprofissional */}
-            <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
+            <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
               <SectionHeader
                 icon={<FileText className="h-4 w-4" aria-hidden="true" />}
                 title="Coordenação do Cuidado • Identificação, Vínculo e Equipe Multiprofissional"
@@ -787,7 +787,7 @@ export function EmployeeCockpit({
               </div>
 
               {/* Demandas Geradas e Anamnese */}
-              <div className="mt-3 space-y-3 border-t border-[#EFECE6] pt-3">
+              <div className="mt-3 space-y-3 border-t border-[#F2F4F7] pt-3">
                 <div>
                   <label className={LABEL_CLASS}>
                     Demandas Geradas na Última Consulta Médica
@@ -839,7 +839,7 @@ export function EmployeeCockpit({
             </article>
 
             {/* Bloco 2: Plano de Cuidados Individual (PCI) */}
-            <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
+            <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
               <SectionHeader
                 icon={<ListChecks className="h-4 w-4" aria-hidden="true" />}
                 title="Plano de Cuidados Individual (PCI)"
@@ -910,7 +910,7 @@ export function EmployeeCockpit({
                     <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-[12px] font-bold uppercase tracking-wide text-[#C84B31]">
+                    <h3 className="text-[12px] font-semibold uppercase tracking-wide text-[#C84B31]">
                       Busca Ativa • 1ª Consulta Pendente
                     </h3>
                     <p className="mt-0.5 text-[11px] text-[#7A3A2A]">
@@ -920,7 +920,7 @@ export function EmployeeCockpit({
                 </div>
                 <div className="mt-3 flex flex-wrap items-end gap-2">
                   <label className="min-w-[160px] flex-1">
-                    <span className="mb-1 block text-[9.5px] font-bold uppercase text-[#7A3A2A]">
+                    <span className="mb-1 block text-[9.5px] font-semibold uppercase text-[#7A3A2A]">
                       Classificação na 1ª Consulta
                     </span>
                     <select
@@ -940,7 +940,7 @@ export function EmployeeCockpit({
                   <button
                     type="button"
                     onClick={handleRegisterFirstVisit}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#1F564C] px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-[#163F37]"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#0E7A5F] px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-[#0B5F4A]"
                   >
                     <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                     Registrar 1ª Consulta Realizada
@@ -950,7 +950,7 @@ export function EmployeeCockpit({
             )}
 
             {/* Bloco 3: Gestão de Retorno Automatizada + Conexão Sistema de Agendamento & Microsoft Teams */}
-            <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
+            <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
               <SectionHeader
                 icon={<CalendarClock className="h-4 w-4" aria-hidden="true" />}
                 title="Gestão de Retorno & Integração de Agenda (S+ / Microsoft Teams)"
@@ -980,7 +980,7 @@ export function EmployeeCockpit({
                     type="text"
                     value={formatDateBr(draft.nextVisit)}
                     readOnly
-                    className={`${FIELD_CLASS} bg-[#EEF6F3] font-bold text-[#1F564C]`}
+                    className={`${FIELD_CLASS} bg-[#ECF8F3] font-semibold text-[#0E7A5F]`}
                   />
                 </div>
                 <div>
@@ -1015,32 +1015,32 @@ export function EmployeeCockpit({
                     type="text"
                     value={formatDateBr(draft.nextCareCoordinationDate || draft.nextVisit)}
                     readOnly
-                    className={`${FIELD_CLASS} bg-[#FAF9F6] font-semibold text-[#1E2926]`}
+                    className={`${FIELD_CLASS} bg-[#F9FAFB] font-semibold text-[#101828]`}
                   />
                 </div>
               </div>
 
               {/* Card de Conexão com Sistema de Agendamento e Agenda do Microsoft Teams */}
-              <div className="mt-3.5 space-y-3 rounded-xl border border-[#C6E4DA] bg-[#F4F9F7] p-3.5">
+              <div className="mt-3.5 space-y-3 rounded-xl border border-[#C7EADC] bg-[#F3FAF7] p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1F564C] text-white">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0E7A5F] text-white">
                       <Video className="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
                     <div>
-                      <h4 className="text-[11.5px] font-bold text-[#1E2926]">
+                      <h4 className="text-[11.5px] font-semibold text-[#101828]">
                         Agenda Conectada • Sistema S+ & Microsoft Teams
                       </h4>
-                      <p className="text-[10px] text-[#5A6561]">
+                      <p className="text-[10px] text-[#475467]">
                         Reserva automática na janela do turno e envio de link direto ao trabalhador
                       </p>
                     </div>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[9.5px] font-semibold ${
                       teamsCalendarSynced
-                        ? 'bg-[#1F564C] text-white'
-                        : 'border border-[#C6E4DA] bg-white text-[#1F564C]'
+                        ? 'bg-[#0E7A5F] text-white'
+                        : 'border border-[#C7EADC] bg-white text-[#0E7A5F]'
                     }`}
                   >
                     {teamsCalendarSynced ? '✓ Sincronizado na Agenda' : 'Pronto p/ Agendar'}
@@ -1084,7 +1084,7 @@ export function EmployeeCockpit({
                   <button
                     type="button"
                     onClick={handleSyncScheduleAndTeams}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#1F564C] px-3 py-2 text-[11.5px] font-semibold text-white shadow-xs transition-colors hover:bg-[#163F37]"
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0E7A5F] px-3 py-2 text-[11.5px] font-semibold text-white shadow-xs transition-colors hover:bg-[#0B5F4A]"
                   >
                     <CalendarCheck className="h-3.5 w-3.5" aria-hidden="true" />
                     {teamsCalendarSynced
@@ -1095,7 +1095,7 @@ export function EmployeeCockpit({
                   <button
                     type="button"
                     onClick={() => setShowWorkerAccessPreview((v) => !v)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C]/30 bg-white px-2.5 py-2 text-[11px] font-semibold text-[#1F564C] transition-colors hover:bg-[#EEF6F3]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#0E7A5F]/30 bg-white px-2.5 py-2 text-[11px] font-semibold text-[#0E7A5F] transition-colors hover:bg-[#ECF8F3]"
                   >
                     <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
                     {showWorkerAccessPreview ? 'Ocultar Acesso' : 'Ver Acesso do Trabalhador'}
@@ -1103,29 +1103,29 @@ export function EmployeeCockpit({
                 </div>
 
                 {showWorkerAccessPreview && (
-                  <div className="space-y-2 rounded-xl border border-[#DCD7CC] bg-white p-3 shadow-xs">
-                    <div className="flex items-center justify-between border-b border-[#EFECE6] pb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
+                  <div className="space-y-2 rounded-xl border border-[#E4E7EC] bg-white p-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-[#F2F4F7] pb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                         Visão do Trabalhador • Acesso Direto sem Senha (Teams & WhatsApp)
                       </span>
-                      <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#1F564C]">
+                      <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#0E7A5F]">
                         {draft.carePassCode || `PASSE-${draft.matricula.slice(-4)}`}
                       </span>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-[#1E2926]">
+                    <p className="text-[11px] leading-relaxed text-[#101828]">
                       Olá, <strong>{draft.name.split(' ')[0]}</strong>! Seu atendimento com{' '}
                       <strong>{draft.referenceDoctor}</strong> está reservado na sua janela protegida:{' '}
-                      <strong className="text-[#1F564C]">
+                      <strong className="text-[#0E7A5F]">
                         {draft.protectedWindowSlot || 'Horário protegido do turno'}
                       </strong>
                       .
                     </p>
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#EEF6F3] px-2.5 py-1 text-[10.5px] font-semibold text-[#1F564C]">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#ECF8F3] px-2.5 py-1 text-[10.5px] font-semibold text-[#0E7A5F]">
                         <CheckCircle2 className="h-3 w-3" /> Horário liberado no turno (sem desconto)
                       </span>
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#F4F1EA] px-2.5 py-1 text-[10.5px] font-semibold text-[#1E2926]">
-                        <ExternalLink className="h-3 w-3 text-[#1F564C]" /> Link Direto Microsoft Teams / Check-in 60s
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#F3F4F6] px-2.5 py-1 text-[10.5px] font-semibold text-[#101828]">
+                        <ExternalLink className="h-3 w-3 text-[#0E7A5F]" /> Link Direto Microsoft Teams / Check-in 60s
                       </span>
                     </div>
                   </div>
@@ -1134,17 +1134,17 @@ export function EmployeeCockpit({
             </article>
 
             {/* Bloco 4: Leitura de Prontuário / Resultados de Exames (Visualizador 3 Colunas + Custódia de Integridade SHA-256) */}
-            <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EFECE6] pb-2.5">
+            <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F2F4F7] pb-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF6F3] text-[#1F564C]">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ECF8F3] text-[#0E7A5F]">
                     <FileScan className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#1E2926]">
+                    <h3 className="text-[12px] font-semibold text-[#101828]">
                       Prontuário & Resultados de Exames (Leitor 3 Colunas + Custódia SHA-256)
                     </h3>
-                    <p className="text-[10.5px] text-[#5A6561]">
+                    <p className="text-[10.5px] text-[#475467]">
                       Importa laudos, receitas e evoluções com visualização central e armazena os arquivos lidos com controle de integridade
                     </p>
                   </div>
@@ -1153,7 +1153,7 @@ export function EmployeeCockpit({
                   <button
                     type="button"
                     onClick={() => void openProntuarioReaderWithSample(0)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C] bg-[#1F564C] px-2.5 py-1.5 text-[10.5px] font-semibold text-white shadow-xs hover:bg-[#163F37]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#0E7A5F] bg-[#0E7A5F] px-2.5 py-1.5 text-[10.5px] font-semibold text-white shadow-xs hover:bg-[#0B5F4A]"
                   >
                     <FileScan className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Abrir Leitor de Prontuário / Exame</span>
@@ -1161,9 +1161,9 @@ export function EmployeeCockpit({
                   <button
                     type="button"
                     onClick={() => examFileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-[#FAF9F6] px-2.5 py-1.5 text-[10.5px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] px-2.5 py-1.5 text-[10.5px] font-semibold text-[#101828] hover:border-[#0E7A5F]"
                   >
-                    <Upload className="h-3 w-3 text-[#1F564C]" aria-hidden="true" />
+                    <Upload className="h-3 w-3 text-[#0E7A5F]" aria-hidden="true" />
                     <span>Anexar Arquivo</span>
                   </button>
                   <input
@@ -1184,7 +1184,7 @@ export function EmployeeCockpit({
                     key={sample.fileName}
                     type="button"
                     onClick={() => void openProntuarioReaderWithSample(idx)}
-                    className="rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C] hover:bg-[#EEF6F3] hover:text-[#1F564C]"
+                    className="rounded-md border border-[#E4E7EC] bg-[#F9FAFB] px-2 py-1 text-[10px] font-semibold text-[#101828] hover:border-[#0E7A5F] hover:bg-[#ECF8F3] hover:text-[#0E7A5F]"
                   >
                     + Ler {sample.label}
                   </button>
@@ -1192,21 +1192,21 @@ export function EmployeeCockpit({
               </div>
 
               {/* Repositório de Arquivos Lidos & Controle de Segurança da Integridade da Informação */}
-              <div className="mt-3 rounded-xl border border-[#C6E4DA] bg-[#F4F9F7] p-3">
+              <div className="mt-3 rounded-xl border border-[#C7EADC] bg-[#F3FAF7] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5 text-[#1F564C]" aria-hidden="true" />
-                    <span className="text-[11px] font-bold text-[#1E2926]">
+                    <Lock className="h-3.5 w-3.5 text-[#0E7A5F]" aria-hidden="true" />
+                    <span className="text-[11px] font-semibold text-[#101828]">
                       Arquivos Lidos e Armazenados no Prontuário (Integridade SHA-256)
                     </span>
                   </div>
-                  <span className="rounded-full bg-[#1F564C] px-2 py-0.5 text-[9.5px] font-bold text-white">
+                  <span className="rounded-full bg-[#0E7A5F] px-2 py-0.5 text-[9.5px] font-semibold text-white">
                     {storedDocs.length} arquivo(s) sob custódia
                   </span>
                 </div>
 
                 {storedDocs.length === 0 ? (
-                  <p className="mt-2 rounded-lg border border-dashed border-[#C6E4DA] bg-white/80 px-3 py-2.5 text-center text-[10.5px] text-[#5A6561]">
+                  <p className="mt-2 rounded-lg border border-dashed border-[#C7EADC] bg-white/80 px-3 py-2.5 text-center text-[10.5px] text-[#475467]">
                     Nenhum arquivo de prontuário/exame arquivado ainda. Clique em{' '}
                     <strong>Abrir Leitor de Prontuário / Exame</strong> para ler e armazenar com hash SHA-256.
                   </p>
@@ -1215,22 +1215,22 @@ export function EmployeeCockpit({
                     {storedDocs.map((sdoc) => (
                       <li
                         key={sdoc.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-2 text-[11px]"
+                        className="flex items-center justify-between gap-2 rounded-lg border border-[#E4E7EC] bg-white px-2.5 py-2 text-[11px]"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <Archive className="h-3.5 w-3.5 shrink-0 text-[#1F564C]" />
-                            <span className="truncate font-bold text-[#1E2926]">
+                            <Archive className="h-3.5 w-3.5 shrink-0 text-[#0E7A5F]" />
+                            <span className="truncate font-semibold text-[#101828]">
                               {sdoc.fileName}
                             </span>
-                            <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9px] font-bold text-[#1F564C]">
+                            <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 text-[9px] font-semibold text-[#0E7A5F]">
                               {sdoc.docKind}
                             </span>
                           </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[9.5px] text-[#5A6561]">
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[9.5px] text-[#475467]">
                             <span>{sdoc.importedAt}</span>
                             <span>•</span>
-                            <span className="font-mono text-[#1F564C]">
+                            <span className="font-mono text-[#0E7A5F]">
                               SHA-256: {sdoc.sha256IntegrityHash.slice(0, 14)}…
                             </span>
                             <span>•</span>
@@ -1245,7 +1245,7 @@ export function EmployeeCockpit({
                               inspectedStoredDoc?.id === sdoc.id ? null : sdoc
                             )
                           }
-                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C] hover:text-[#1F564C]"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E4E7EC] bg-[#F9FAFB] px-2 py-1 text-[10px] font-semibold text-[#101828] hover:border-[#0E7A5F] hover:text-[#0E7A5F]"
                         >
                           <Eye className="h-3 w-3" aria-hidden="true" />
                           <span>
@@ -1258,26 +1258,26 @@ export function EmployeeCockpit({
                 )}
 
                 {inspectedStoredDoc && (
-                  <div className="mt-2.5 rounded-lg border border-[#1F564C]/30 bg-white p-3 text-[11px]">
-                    <div className="flex items-center justify-between border-b border-[#EFECE6] pb-1.5">
-                      <span className="font-bold text-[#1F564C]">
+                  <div className="mt-2.5 rounded-lg border border-[#0E7A5F]/30 bg-white p-3 text-[11px]">
+                    <div className="flex items-center justify-between border-b border-[#F2F4F7] pb-1.5">
+                      <span className="font-semibold text-[#0E7A5F]">
                         Registro de Auditoria e Integridade: {inspectedStoredDoc.fileName}
                       </span>
-                      <span className="font-mono text-[9.5px] text-[#5A6561]">
+                      <span className="font-mono text-[9.5px] text-[#475467]">
                         Hash: {inspectedStoredDoc.sha256IntegrityHash.slice(0, 24)}…
                       </span>
                     </div>
                     {inspectedStoredDoc.fieldsUpdated.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-[10px] font-bold uppercase text-[#5A6561]">
+                        <p className="text-[10px] font-semibold uppercase text-[#475467]">
                           Campos Atualizados a partir deste Documento:
                         </p>
                         <ul className="mt-1 space-y-1 text-[10.5px]">
                           {inspectedStoredDoc.fieldsUpdated.map((fu, i) => (
-                            <li key={i} className="rounded bg-[#FAF9F6] px-2 py-1">
+                            <li key={i} className="rounded bg-[#F9FAFB] px-2 py-1">
                               <strong>{fu.label}:</strong> {fu.before} →{' '}
-                              <strong className="text-[#1F564C]">{fu.after}</strong>{' '}
-                              <span className="text-[9.5px] text-[#5A6561]">
+                              <strong className="text-[#0E7A5F]">{fu.after}</strong>{' '}
+                              <span className="text-[9.5px] text-[#475467]">
                                 (“{fu.evidence}”)
                               </span>
                             </li>
@@ -1286,10 +1286,10 @@ export function EmployeeCockpit({
                       </div>
                     )}
                     <div className="mt-2">
-                      <p className="text-[10px] font-bold uppercase text-[#5A6561]">
+                      <p className="text-[10px] font-semibold uppercase text-[#475467]">
                         Conteúdo Arquivado (Somente Leitura • Imutável):
                       </p>
-                      <pre className="mt-1 max-h-36 overflow-y-auto whitespace-pre-wrap rounded border border-[#EFECE6] bg-[#FAF9F6] p-2 font-mono text-[10px] text-[#1E2926]">
+                      <pre className="mt-1 max-h-36 overflow-y-auto whitespace-pre-wrap rounded border border-[#F2F4F7] bg-[#F9FAFB] p-2 font-mono text-[10px] text-[#101828]">
                         {inspectedStoredDoc.extractedText}
                       </pre>
                     </div>
@@ -1300,33 +1300,33 @@ export function EmployeeCockpit({
               {/* Lista de Prescrições e Exames Clínicos Registrados */}
               <div className="mt-3 space-y-2">
                 {(draft.examResultsAndPrescriptions || []).length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-[#DCD7CC] bg-[#FAF9F6] px-3 py-3 text-center text-[11px] text-[#8A938F]">
+                  <p className="rounded-lg border border-dashed border-[#E4E7EC] bg-[#F9FAFB] px-3 py-3 text-center text-[11px] text-[#98A2B3]">
                     Nenhuma prescrição ou resultado de exame anexado neste retorno.
                   </p>
                 ) : (
                   (draft.examResultsAndPrescriptions || []).map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start justify-between gap-2 rounded-lg border border-[#E6E2D8] bg-[#FAF9F6] p-2.5"
+                      className="flex items-start justify-between gap-2 rounded-lg border border-[#EAECF0] bg-[#F9FAFB] p-2.5"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1F564C]">
+                          <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#0E7A5F]">
                             {item.category}
                           </span>
-                          <span className="text-[10px] text-[#5A6561]">
+                          <span className="text-[10px] text-[#475467]">
                             {formatDateBr(item.date)} • {item.sourceMethod}
                           </span>
                           {item.sha256Hash && (
-                            <span className="rounded bg-white px-1.5 py-0.5 font-mono text-[9px] text-[#1F564C]">
+                            <span className="rounded bg-white px-1.5 py-0.5 font-mono text-[9px] text-[#0E7A5F]">
                               SHA-256: {item.sha256Hash.slice(0, 8)}…
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">
+                        <p className="mt-1 text-[11.5px] font-semibold text-[#101828]">
                           {item.title}
                         </p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-[#5A6561]">
+                        <p className="mt-0.5 text-[11px] leading-snug text-[#475467]">
                           {item.details}
                         </p>
                       </div>
@@ -1334,7 +1334,7 @@ export function EmployeeCockpit({
                         type="button"
                         onClick={() => handleRemoveExamEntry(item.id)}
                         aria-label="Remover registro"
-                        className="rounded p-1 text-[#8A938F] hover:bg-[#FDF2F0] hover:text-[#C84B31]"
+                        className="rounded p-1 text-[#98A2B3] hover:bg-[#FDF2F0] hover:text-[#C84B31]"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
@@ -1345,7 +1345,7 @@ export function EmployeeCockpit({
             </article>
 
             {/* Bloco 5: Histórico e Contatos Mensais de 2026 + Pré-Check-in QR */}
-            <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
+            <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
               <SectionHeader
                 icon={<ClipboardList className="h-4 w-4" aria-hidden="true" />}
                 title="Histórico e Contatos Mensais de Monitoramento (2026)"
@@ -1372,57 +1372,57 @@ export function EmployeeCockpit({
                   ] as const
                 ).map(([key, label]) => (
                   <div key={key}>
-                    <label className="mb-0.5 block text-[9.5px] font-semibold text-[#5A6561]">
+                    <label className="mb-0.5 block text-[9.5px] font-semibold text-[#475467]">
                       {label}
                     </label>
                     <input
                       type="text"
                       value={mc[key] || ''}
                       onChange={(e) => updateMonthlyContact(key, e.target.value)}
-                      className="w-full rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[11px] text-[#1E2926] focus:border-[#1F564C] focus:bg-white focus:outline-none"
+                      className="w-full rounded-md border border-[#E4E7EC] bg-[#F9FAFB] px-2 py-1 text-[11px] text-[#101828] focus:border-[#0E7A5F] focus:bg-white focus:outline-none"
                     />
                   </div>
                 ))}
               </div>
 
-              <div className="mt-3 border-t border-[#EFECE6] pt-3">
+              <div className="mt-3 border-t border-[#F2F4F7] pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-bold uppercase tracking-wide text-[#5A6561]">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[#475467]">
                     Pré-Check-in 60s do Trabalhador (QR Code / Link Teams)
                   </span>
                   {!draft.checkIn60s && (
                     <button
                       type="button"
                       onClick={handleRecordPreCheckIn}
-                      className="text-[10.5px] font-semibold text-[#1F564C] hover:underline"
+                      className="text-[10.5px] font-semibold text-[#0E7A5F] hover:underline"
                     >
                       + Registrar respostas do trabalhador
                     </button>
                   )}
                 </div>
                 {draft.checkIn60s ? (
-                  <div className="mt-1.5 grid grid-cols-2 gap-1.5 rounded-lg border border-[#E6E2D8] bg-[#FAF9F6] p-2.5 text-[10.5px]">
+                  <div className="mt-1.5 grid grid-cols-2 gap-1.5 rounded-lg border border-[#EAECF0] bg-[#F9FAFB] p-2.5 text-[10.5px]">
                     <div>
-                      <span className="text-[#8A938F]">Dor:</span>{' '}
-                      <strong className="text-[#1E2926]">{draft.checkIn60s.painLevel}</strong>
+                      <span className="text-[#98A2B3]">Dor:</span>{' '}
+                      <strong className="text-[#101828]">{draft.checkIn60s.painLevel}</strong>
                     </div>
                     <div>
-                      <span className="text-[#8A938F]">Sono:</span>{' '}
-                      <strong className="text-[#1E2926]">{draft.checkIn60s.sleepQuality}</strong>
+                      <span className="text-[#98A2B3]">Sono:</span>{' '}
+                      <strong className="text-[#101828]">{draft.checkIn60s.sleepQuality}</strong>
                     </div>
                     <div>
-                      <span className="text-[#8A938F]">Humor:</span>{' '}
-                      <strong className="text-[#1E2926]">{draft.checkIn60s.stressAndMood}</strong>
+                      <span className="text-[#98A2B3]">Humor:</span>{' '}
+                      <strong className="text-[#101828]">{draft.checkIn60s.stressAndMood}</strong>
                     </div>
                     <div>
-                      <span className="text-[#8A938F]">PA Ref.:</span>{' '}
-                      <strong className="text-[#1F564C]">
+                      <span className="text-[#98A2B3]">PA Ref.:</span>{' '}
+                      <strong className="text-[#0E7A5F]">
                         {draft.checkIn60s.bloodPressureRef}
                       </strong>
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-1 text-[11px] text-[#8A938F]">
+                  <p className="mt-1 text-[11px] text-[#98A2B3]">
                     Sem pré-check-in registrado para a consulta atual.
                   </p>
                 )}
@@ -1437,22 +1437,22 @@ export function EmployeeCockpit({
       {/* ======================================================================== */}
       {isProntuarioReaderOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E2926]/65 p-2 backdrop-blur-[2px] sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#101828]/65 p-2 backdrop-blur-[2px] sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Leitor Interativo de Prontuário e Resultados de Exame"
         >
-          <div className="flex h-[calc(90vh/var(--ui-zoom))] w-full max-w-[1480px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
-            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#DED9CE] bg-white px-4 py-2.5">
+          <div className="flex h-[calc(90vh/var(--ui-zoom))] w-full max-w-[1480px] flex-col overflow-hidden rounded-2xl border border-[#E4E7EC] bg-[#F9FAFB] shadow-2xl">
+            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#E4E7EC] bg-white px-4 py-2.5">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F564C] text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0E7A5F] text-white">
                   <FileScan className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-[13.5px] font-bold text-[#1E2926]">
+                  <h3 className="text-[13.5px] font-semibold text-[#101828]">
                     Leitor de Prontuário, Exames e Prescrições — {draft.name} (Mat. {draft.matricula})
                   </h3>
-                  <p className="text-[11px] text-[#5A6561]">
+                  <p className="text-[11px] text-[#475467]">
                     Estrutura em 3 colunas com destaque de evidência no documento e arquivamento imutável (SHA-256) no prontuário
                   </p>
                 </div>
@@ -1461,7 +1461,7 @@ export function EmployeeCockpit({
                 <button
                   type="button"
                   onClick={() => examFileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 rounded-lg bg-[#1F564C] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#163F37]"
+                  className="inline-flex items-center gap-1 rounded-lg bg-[#0E7A5F] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0B5F4A]"
                 >
                   <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Adicionar Laudos / Prontuários</span>
@@ -1469,7 +1469,7 @@ export function EmployeeCockpit({
                 <button
                   type="button"
                   onClick={() => setIsProntuarioReaderOpen(false)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5A6561] hover:text-[#1E2926]"
+                  className="inline-flex items-center gap-1 rounded-lg border border-[#E4E7EC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#475467] hover:text-[#101828]"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Fechar Leitor</span>
@@ -1479,9 +1479,9 @@ export function EmployeeCockpit({
 
             <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-12">
               {/* Coluna Esquerda (3/12): Documentos de Prontuário / Exames Inseridos */}
-              <aside className="flex min-h-0 flex-col border-r border-[#DED9CE] bg-[#F2EFE8] lg:col-span-3">
-                <div className="border-b border-[#DED9CE] p-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
+              <aside className="flex min-h-0 flex-col border-r border-[#E4E7EC] bg-[#F3F4F6] lg:col-span-3">
+                <div className="border-b border-[#E4E7EC] p-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                     1. Documentos Clínicos em Lote ({prontuarioQueue.length})
                   </span>
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -1490,7 +1490,7 @@ export function EmployeeCockpit({
                         key={s.fileName}
                         type="button"
                         onClick={() => void openProntuarioReaderWithSample(i)}
-                        className="rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                        className="rounded border border-[#E4E7EC] bg-white px-2 py-1 text-[10px] font-semibold text-[#101828] hover:border-[#0E7A5F]"
                       >
                         + {s.label}
                       </button>
@@ -1509,23 +1509,23 @@ export function EmployeeCockpit({
                           }}
                           className={`flex w-full items-start justify-between gap-2 rounded-xl border p-2.5 text-left ${
                             idx === prontuarioIdx
-                              ? 'border-[#1F564C] bg-white shadow-xs'
-                              : 'border-[#DED9CE] bg-white/70'
+                              ? 'border-[#0E7A5F] bg-white shadow-xs'
+                              : 'border-[#E4E7EC] bg-white/70'
                           }`}
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[11.5px] font-bold text-[#1E2926]">
+                            <p className="truncate text-[11.5px] font-semibold text-[#101828]">
                               {item.doc.name}
                             </p>
-                            <p className="text-[10px] text-[#5A6561]">
+                            <p className="text-[10px] text-[#475467]">
                               {KIND_LABEL[item.extraction.kind]} • SHA-256:{' '}
                               {item.doc.sha256Hash.slice(0, 8)}…
                             </p>
                           </div>
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
+                            className={`rounded-full px-2 py-0.5 text-[9.5px] font-semibold ${
                               item.status === 'ok'
-                                ? 'bg-[#EEF6F3] text-[#1F564C]'
+                                ? 'bg-[#ECF8F3] text-[#0E7A5F]'
                                 : 'bg-[#FDF7EC] text-[#C26D27]'
                             }`}
                           >
@@ -1539,18 +1539,18 @@ export function EmployeeCockpit({
               </aside>
 
               {/* Coluna Central (5/12): Visualização do Documento Clínico / Laudo */}
-              <section className="flex min-h-0 flex-col border-r border-[#DED9CE] bg-[#E8E3D9] lg:col-span-5">
+              <section className="flex min-h-0 flex-col border-r border-[#E4E7EC] bg-[#EAECF0] lg:col-span-5">
                 {currentProntuarioItem ? (
                   <>
-                    <div className="flex items-center justify-between border-b border-[#DED9CE] bg-white px-3.5 py-2">
-                      <div className="flex items-center gap-1 rounded-lg bg-[#F2EFE8] p-0.5">
+                    <div className="flex items-center justify-between border-b border-[#E4E7EC] bg-white px-3.5 py-2">
+                      <div className="flex items-center gap-1 rounded-lg bg-[#F3F4F6] p-0.5">
                         <button
                           type="button"
                           onClick={() => setProntuarioTab('rendered')}
                           className={`rounded-md px-2.5 py-1 text-[11px] font-semibold ${
                             prontuarioTab === 'rendered'
-                              ? 'bg-[#1F564C] text-white'
-                              : 'text-[#5A6561]'
+                              ? 'bg-[#0E7A5F] text-white'
+                              : 'text-[#475467]'
                           }`}
                         >
                           Documento Clínico
@@ -1560,14 +1560,14 @@ export function EmployeeCockpit({
                           onClick={() => setProntuarioTab('raw')}
                           className={`rounded-md px-2.5 py-1 text-[11px] font-semibold ${
                             prontuarioTab === 'raw'
-                              ? 'bg-[#1F564C] text-white'
-                              : 'text-[#5A6561]'
+                              ? 'bg-[#0E7A5F] text-white'
+                              : 'text-[#475467]'
                           }`}
                         >
                           Texto Lido (OCR)
                         </button>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded bg-[#EEF6F3] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#1F564C]">
+                      <span className="inline-flex items-center gap-1 rounded bg-[#ECF8F3] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#0E7A5F]">
                         <ShieldCheck className="h-3 w-3" />
                         SHA-256: {currentProntuarioItem.doc.sha256Hash.slice(0, 12)}…
                       </span>
@@ -1581,22 +1581,22 @@ export function EmployeeCockpit({
                     )}
 
                     <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                      <div className="mx-auto max-w-[650px] rounded-xl border border-[#D8D1C5] bg-white p-5 shadow-md">
-                        <div className="mb-3 flex items-center justify-between border-b-2 border-[#1F564C] pb-2">
+                      <div className="mx-auto max-w-[650px] rounded-xl border border-[#E4E7EC] bg-white p-5 shadow-md">
+                        <div className="mb-3 flex items-center justify-between border-b-2 border-[#0E7A5F] pb-2">
                           <div>
-                            <span className="text-[10px] font-bold uppercase text-[#1F564C]">
+                            <span className="text-[10px] font-semibold uppercase text-[#0E7A5F]">
                               {KIND_LABEL[currentProntuarioItem.extraction.kind]} • Prontuário S+
                             </span>
-                            <h4 className="text-[13px] font-bold text-[#1E2926]">
+                            <h4 className="text-[13px] font-semibold text-[#101828]">
                               {currentProntuarioItem.doc.name}
                             </h4>
                           </div>
-                          <span className="rounded bg-[#F2EFE8] px-2 py-0.5 text-[10px] font-semibold text-[#5A6561]">
+                          <span className="rounded bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-[#475467]">
                             {currentProntuarioItem.doc.method}
                           </span>
                         </div>
                         <div
-                          className={`whitespace-pre-wrap text-[12px] leading-relaxed text-[#1E2926] ${
+                          className={`whitespace-pre-wrap text-[12px] leading-relaxed text-[#101828] ${
                             prontuarioTab === 'raw' ? 'font-mono' : 'font-sans'
                           }`}
                           dangerouslySetInnerHTML={{
@@ -1616,28 +1616,28 @@ export function EmployeeCockpit({
               <aside className="flex min-h-0 flex-col bg-white lg:col-span-4">
                 {currentProntuarioItem ? (
                   <>
-                    <div className="border-b border-[#DED9CE] bg-[#FAF9F6] p-3.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
+                    <div className="border-b border-[#E4E7EC] bg-[#F9FAFB] p-3.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
                         2. Informações Clínicas e de Retorno Constantes no Documento
                       </span>
-                      <h4 className="text-[13px] font-bold text-[#1E2926]">
+                      <h4 className="text-[13px] font-semibold text-[#101828]">
                         {draft.name} (Mat. {draft.matricula})
                       </h4>
-                      <p className="text-[10.5px] text-[#5A6561]">
+                      <p className="text-[10.5px] text-[#475467]">
                         Ao validar, o arquivo original é armazenado no prontuário com hash SHA-256 e os prazos de retorno são recalculados.
                       </p>
                     </div>
 
                     <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3.5">
                       {currentProntuarioItem.extraction.clinicalSummary && (
-                        <div className="rounded-xl border border-[#C6E4DA] bg-[#EEF6F3] p-3">
-                          <span className="text-[10px] font-bold uppercase text-[#1F564C]">
+                        <div className="rounded-xl border border-[#C7EADC] bg-[#ECF8F3] p-3">
+                          <span className="text-[10px] font-semibold uppercase text-[#0E7A5F]">
                             Resumo Clínico Identificado ({currentProntuarioItem.extraction.clinicalSummary.category})
                           </span>
-                          <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">
+                          <p className="mt-1 text-[11.5px] font-semibold text-[#101828]">
                             {currentProntuarioItem.extraction.clinicalSummary.title}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-[#5A6561]">
+                          <p className="mt-0.5 text-[11px] text-[#475467]">
                             {currentProntuarioItem.extraction.clinicalSummary.details}
                           </p>
                         </div>
@@ -1651,15 +1651,15 @@ export function EmployeeCockpit({
                             onClick={() => setActiveProntuarioField(field.key)}
                             className={`rounded-lg border p-2.5 ${
                               activeProntuarioField === field.key
-                                ? 'border-[#1F564C] bg-[#FAF9F6] ring-2 ring-[#1F564C]/15'
-                                : 'border-[#E5E0D5] bg-white'
+                                ? 'border-[#0E7A5F] bg-[#F9FAFB] ring-2 ring-[#0E7A5F]/15'
+                                : 'border-[#EAECF0] bg-white'
                             }`}
                           >
                             <div className="mb-1 flex items-center justify-between">
-                              <span className="text-[11px] font-bold text-[#1E2926]">
+                              <span className="text-[11px] font-semibold text-[#101828]">
                                 {field.label || LABEL[field.key]}
                               </span>
-                              <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1F564C]">
+                              <span className="rounded bg-[#ECF8F3] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#0E7A5F]">
                                 {field.state === 'new'
                                   ? 'Novo'
                                   : field.state === 'changed'
@@ -1674,7 +1674,7 @@ export function EmployeeCockpit({
                                 onChange={(e) =>
                                   handleProntuarioFieldChange(field.key, e.target.value)
                                 }
-                                className="w-full rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[11.5px]"
+                                className="w-full rounded border border-[#E4E7EC] bg-white px-2 py-1 text-[11.5px]"
                               >
                                 <option value="">(vazio)</option>
                                 {opts.map((o) => (
@@ -1691,10 +1691,10 @@ export function EmployeeCockpit({
                                 onChange={(e) =>
                                   handleProntuarioFieldChange(field.key, e.target.value)
                                 }
-                                className="w-full rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[11.5px]"
+                                className="w-full rounded border border-[#E4E7EC] bg-white px-2 py-1 text-[11.5px]"
                               />
                             )}
-                            <p className="mt-1 truncate text-[10px] text-[#5A6561]">
+                            <p className="mt-1 truncate text-[10px] text-[#475467]">
                               Evidência: “{field.evidence}”
                             </p>
                           </div>
@@ -1702,18 +1702,18 @@ export function EmployeeCockpit({
                       })}
                     </div>
 
-                    <footer className="flex items-center justify-between gap-2 border-t border-[#DED9CE] bg-[#FAF9F6] px-3.5 py-2.5">
+                    <footer className="flex items-center justify-between gap-2 border-t border-[#E4E7EC] bg-[#F9FAFB] px-3.5 py-2.5">
                       <button
                         type="button"
                         onClick={() => setIsProntuarioReaderOpen(false)}
-                        className="rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5A6561]"
+                        className="rounded-lg border border-[#E4E7EC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#475467]"
                       >
                         Fechar
                       </button>
                       <button
                         type="button"
                         onClick={handleApplyProntuarioItem}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#1F564C] px-4 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#163F37]"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0E7A5F] px-4 py-1.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0B5F4A]"
                       >
                         <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>Validar, Atualizar Ficha e Arquivar Prontuário</span>
@@ -1738,13 +1738,13 @@ interface SectionHeaderProps {
 
 function SectionHeader({ icon, title, subtitle }: SectionHeaderProps) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-[#EFECE6] pb-2.5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#EEF6F3] text-[#1F564C]">
+    <div className="flex items-center gap-2.5 border-b border-[#F2F4F7] pb-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#ECF8F3] text-[#0E7A5F]">
         {icon}
       </span>
       <div className="min-w-0">
-        <h2 className="truncate text-[12px] font-bold text-[#1E2926]">{title}</h2>
-        <p className="truncate text-[10.5px] text-[#5A6561]">{subtitle}</p>
+        <h2 className="truncate text-[12px] font-semibold text-[#101828]">{title}</h2>
+        <p className="truncate text-[10.5px] text-[#475467]">{subtitle}</p>
       </div>
     </div>
   );
@@ -1775,22 +1775,22 @@ function EditableListCard({
   };
 
   return (
-    <div className="flex flex-col rounded-lg border border-[#E6E2D8] bg-[#FAF9F6] p-2.5">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-bold text-[#1E2926]">
-        <span className="text-[#1F564C]">{icon}</span>
+    <div className="flex flex-col rounded-lg border border-[#EAECF0] bg-[#F9FAFB] p-2.5">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold text-[#101828]">
+        <span className="text-[#0E7A5F]">{icon}</span>
         <span className="truncate">{title}</span>
       </div>
       <ul className="mb-2 flex-1 space-y-1">
         {items.map((item, idx) => (
           <li
             key={`${idx}-${item}`}
-            className="flex items-start justify-between gap-1.5 rounded border border-[#EAE6DC] bg-white px-2 py-1 text-[11px] text-[#1E2926]"
+            className="flex items-start justify-between gap-1.5 rounded border border-[#F2F4F7] bg-white px-2 py-1 text-[11px] text-[#101828]"
           >
             <span className="leading-snug">{item}</span>
             <button
               type="button"
               onClick={() => onChange(items.filter((_, i) => i !== idx))}
-              className="shrink-0 text-[#8A938F] hover:text-[#C84B31]"
+              className="shrink-0 text-[#98A2B3] hover:text-[#C84B31]"
               aria-label="Remover item"
             >
               <X className="h-3 w-3" aria-hidden="true" />
@@ -1810,13 +1810,13 @@ function EditableListCard({
             }
           }}
           placeholder={placeholder}
-          className="min-w-0 flex-1 rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[11px] text-[#1E2926] placeholder:text-[#9AA29E] focus:border-[#1F564C] focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-[#E4E7EC] bg-white px-2 py-1 text-[11px] text-[#101828] placeholder:text-[#98A2B3] focus:border-[#0E7A5F] focus:outline-none"
         />
         <button
           type="button"
           onClick={handleAdd}
           aria-label={`Adicionar em ${title}`}
-          className="inline-flex items-center justify-center rounded border border-[#1F564C] bg-[#1F564C] px-2 py-1 text-white hover:bg-[#163F37]"
+          className="inline-flex items-center justify-center rounded border border-[#0E7A5F] bg-[#0E7A5F] px-2 py-1 text-white hover:bg-[#0B5F4A]"
         >
           <Plus className="h-3 w-3" aria-hidden="true" />
         </button>
