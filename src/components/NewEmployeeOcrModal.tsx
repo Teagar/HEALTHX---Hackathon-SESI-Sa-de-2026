@@ -910,7 +910,7 @@ export function NewEmployeeOcrModal({
                           className={`flex w-full items-start justify-between gap-2 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
                               ? 'border-[#0E7A5F] bg-white shadow-sm ring-1 ring-[#0E7A5F]/25'
-                              : 'border-[#E4E7EC] bg-white/75 hover:bg-white'
+                              : 'border-[#E4E7EC] bg-white/75 hover:border-[#9FD8C2] hover:bg-white hover:shadow-sm'
                           } ${item.status !== 'pend' ? 'opacity-75' : ''}`}
                         >
                           <div className="min-w-0 flex-1">

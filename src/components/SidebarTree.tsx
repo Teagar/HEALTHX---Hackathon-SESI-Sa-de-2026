@@ -315,11 +315,11 @@ export function SidebarTree({
                             <button
                               type="button"
                               onClick={() => handleSelect(emp.id)}
-                              className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-all ${
+                              className={`group flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-all ${
                                 isSelected
-                                  ? 'border-[#0E7A5F] bg-white shadow-sm'
-                                  : 'border-transparent hover:bg-white/70'
-                              } ${isInactive ? 'opacity-60' : ''}`}
+                                  ? 'border-[#0E7A5F] bg-[#ECF8F3] shadow-sm'
+                                  : 'border-transparent hover:border-[#E4E7EC] hover:bg-[#F2F4F7]'
+                              } ${isInactive ? 'opacity-60 hover:opacity-90' : ''}`}
                             >
                               <span
                                 className={`h-2 w-2 shrink-0 rounded-full ${riskStyle.dotClassName}`}
@@ -327,7 +327,9 @@ export function SidebarTree({
                               <span className="min-w-0 flex-1">
                                 <span
                                   className={`block truncate text-[11.5px] font-medium ${
-                                    isSelected ? 'font-semibold text-[#0E7A5F]' : 'text-[#101828]'
+                                    isSelected
+                                      ? 'font-semibold text-[#0E7A5F]'
+                                      : 'text-[#101828] group-hover:text-[#0E7A5F]'
                                   }`}
                                 >
                                   {emp.name}
