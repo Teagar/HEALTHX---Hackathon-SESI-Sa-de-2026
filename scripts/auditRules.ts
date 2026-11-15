@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { INITIAL_EMPLOYEES } from '../src/mockDatabase';
+import { COMPANY_METADATA, INITIAL_EMPLOYEES } from '../src/mockDatabase';
 import {
   computeSpreadsheetCensusFromCsv,
   exportEmployeesToSesiCsvString,
@@ -293,6 +293,59 @@ async function runAsyncChecks() {
     docs.every((d) => /^[0-9a-f]{64}$/.test(d.sha256Hash)),
     docs.filter((d) => !/^[0-9a-f]{64}$/.test(d.sha256Hash)).map((d) => d.name).join(',')
   );
+  // Valores esperados dos anexos de teste (mesmos do tests/extract.test.ts do secilita_planilhas)
+  const extracted = docs.map((d) => ({ name: d.name, method: d.method, exs: engine.analyzeSourceDoc(d) }));
+  const val = (doc: string, key: string, idx = 0) =>
+    extracted.find((x) => x.name === doc)?.exs[idx]?.proposals.find((p) => p.key === key)?.value;
+  const expected: [string, string, string, number?][] = [
+    ['01_gestao-retorno_joana.pdf', 'riscoAtual', 'RISCO 3'],
+    ['01_gestao-retorno_joana.pdf', 'ultMedica', '01/10/2026'],
+    ['01_gestao-retorno_joana.pdf', 'previsaoRetorno', '01/12/2026'],
+    ['01_gestao-retorno_joana.pdf', 'medico', 'Dr. Felipe Andrade'],
+    ['01_gestao-retorno_joana.pdf', 'empresa', 'Alimentos Vale Verde Ltda'],
+    ['04_gestao-cuidado_marcos_escaneado.pdf', 'empresa', 'Química Litoral Norte S.A.'],
+    ['01_gestao-retorno_joana.pdf', 'statusPlano', 'AGUARDANDO RESPOSTA'],
+    ['02_foto-gestao-retorno_rafael.jpg', 'riscoAtual', 'RISCO 2'],
+    ['02_foto-gestao-retorno_rafael.jpg', 'ultMedica', '14/08/2026'],
+    ['02_foto-gestao-retorno_rafael.jpg', 'previsaoRetorno', '14/02/2027'],
+    ['02_foto-gestao-retorno_rafael.jpg', 'statusPlano', 'ADERIU PARCIALMENTE'],
+    ['03_plano-cuidados_camila.pdf', 'riscoAtual', 'RISCO 2'],
+    ['03_plano-cuidados_camila.pdf', 'envioPlano', '03/11/2026'],
+    ['04_gestao-cuidado_marcos_escaneado.pdf', 'riscoAtual', 'RISCO 2'],
+    ['plano-cuidados_luciana.pdf', 'envioPlano', '10/11/2026'],
+    ['06_whatsapp_paulo.txt', 'contNov', '11/11/2026: WhatsApp, confirmou para 19/11/2026'],
+    ['Conversa do WhatsApp com Adriana Melo.txt', 'contNov', '13/11/2026: WhatsApp, pediu remarcação, sugere 24/11/2026'],
+    ['08_declaracao-comparecimento_gilberto.docx', 'ultPsico', '06/11/2026'],
+    ['09_agenda-exportada.xml', 'ultMedica', '09/11/2026'],
+    ['11_teleatendimento.csv', 'previsaoRetorno', '11/02/2027'],
+    ['13_print-conversa_fernanda.png', 'contNov', '13/11/2026: Foto, confirmou para 25/11/2026'],
+  ];
+  const wrong = expected.filter(([doc, key, want, idx]) => val(doc, key, idx) !== want);
+  check(
+    'R9 Anexos de teste extraídos com os valores reais do documento (PDF via pdf.js, foto/escaneado via OCR local)',
+    wrong.length === 0,
+    wrong.length
+      ? wrong.map(([doc, key, want, idx]) => `${doc}.${key}=${val(doc, key, idx)} (esperado ${want})`).join(' | ')
+      : extracted.map((x) => `${x.name.slice(0, 2)}:${x.method}`).join(', ')
+  );
+  check(
+    'R9 PDF digital lido pela camada de texto e escaneado/foto pelo OCR local',
+    extracted.find((x) => x.name === '01_gestao-retorno_joana.pdf')?.method === 'Texto do PDF' &&
+      extracted.find((x) => x.name === '04_gestao-cuidado_marcos_escaneado.pdf')?.method ===
+        'OCR local (PDF escaneado)' &&
+      extracted.find((x) => x.name === '02_foto-gestao-retorno_rafael.jpg')?.method === 'OCR local (imagem)'
+  );
+
+  const companiesOut = extracted.flatMap((x) =>
+    x.exs.flatMap((e) => e.proposals.filter((p) => p.key === 'empresa').map((p) => `${x.name}: ${p.value}`))
+  );
+  const outsideSesi = companiesOut.filter((c) => !Object.keys(COMPANY_METADATA).some((k) => c.endsWith(`: ${k}`)));
+  check(
+    'R9 Anexos de teste citam apenas as 6 empresas do SESI Saúde Acolhe',
+    companiesOut.length > 0 && outsideSesi.length === 0,
+    outsideSesi.join(' | ') || `${companiesOut.length} menções de empresa`
+  );
+
   const items = engine.sourceDocsToQueueItems(docs, emps);
   const newItems = items.filter((i) => i.isNewEmployeeMode);
   const regMissing = newItems.filter((i) =>

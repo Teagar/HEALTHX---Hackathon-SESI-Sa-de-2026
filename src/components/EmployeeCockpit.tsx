@@ -405,7 +405,11 @@ export function EmployeeCockpit({
     event.target.value = '';
     const docs = [];
     for (const f of files) {
-      docs.push(...(await readImportedFile(f)));
+      try {
+        docs.push(...(await readImportedFile(f)));
+      } catch (err) {
+        console.warn(`Arquivo não lido (${f.name}):`, err);
+      }
     }
     const items = sourceDocsToQueueItems(docs, [draft]).map((it) => ({
       ...it,

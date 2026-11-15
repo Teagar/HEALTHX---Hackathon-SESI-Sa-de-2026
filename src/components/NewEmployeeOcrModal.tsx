@@ -38,6 +38,7 @@ import {
   REGISTRATION_COL_KEYS,
   SECILITA_DEMO_FILES,
   sourceDocsToQueueItems,
+  UnsupportedFileError,
 } from '../secilitaEngine';
 
 export interface NewEmployeeOcrModalProps {
@@ -71,6 +72,9 @@ const SAMPLE_COMPLETE_REGISTRATION_TEXT = [
   'Observações sobre a classificação do risco à saúde: Paciente estável, relata leve desconforto lombar ao final da jornada e acompanhamento nutricional.',
   'Demandas geradas: Acompanhamento nutricional; Avaliação ergonômica do posto.',
 ].join('\n');
+
+/** Exemplo digitado (não é um arquivo de public/demo): rotulado como texto, nunca como PDF. */
+const SAMPLE_REGISTRATION_NAME = 'Exemplo: ficha de cadastro (texto colado)';
 
 function escapeHtml(raw: string): string {
   return raw
@@ -135,10 +139,9 @@ export function NewEmployeeOcrModal({
       try {
         const regDoc = await createPastedTextSourceDoc(
           SAMPLE_COMPLETE_REGISTRATION_TEXT,
-          '00_ficha-cadastro-completo_mariana.pdf'
+          SAMPLE_REGISTRATION_NAME
         );
-        regDoc.channel = 'pdf';
-        regDoc.method = 'Texto do PDF';
+        regDoc.method = 'Texto de exemplo (colado)';
         const initialDemos = await loadDemoFilesFromPublic([
           '01_gestao-retorno_joana.pdf',
           '02_foto-gestao-retorno_rafael.jpg',
@@ -192,8 +195,17 @@ export function NewEmployeeOcrModal({
     setStatusBanner(`Lendo ${files.length} arquivo(s) e extraindo campos para a planilha...`);
     try {
       const docs = [];
+      const failures: string[] = [];
       for (const file of files) {
-        docs.push(...(await readImportedFile(file)));
+        try {
+          docs.push(...(await readImportedFile(file)));
+        } catch (err) {
+          failures.push(
+            err instanceof UnsupportedFileError
+              ? `${file.name}: ${err.message}`
+              : `${file.name}: não foi possível ler o arquivo.`
+          );
+        }
       }
       const newItems = sourceDocsToQueueItems(docs, employees);
       setQueue((prev) => {
@@ -204,7 +216,8 @@ export function NewEmployeeOcrModal({
         setCurrentIndex(queue.length);
       }
       setStatusBanner(
-        `${newItems.length} registro(s) extraído(s) de ${files.length} arquivo(s). Confira na coluna da direita.`
+        `${newItems.length} registro(s) extraído(s) de ${files.length - failures.length} arquivo(s). Confira na coluna da direita.` +
+          (failures.length ? ` Não lidos: ${failures.join(' • ')}` : '')
       );
     } finally {
       setIsLoadingFiles(false);
@@ -236,10 +249,9 @@ export function NewEmployeeOcrModal({
   const handleLoadCompleteRegistrationSample = async () => {
     const regDoc = await createPastedTextSourceDoc(
       SAMPLE_COMPLETE_REGISTRATION_TEXT,
-      'ficha-cadastro-completo_mariana.pdf'
+      SAMPLE_REGISTRATION_NAME
     );
-    regDoc.channel = 'pdf';
-    regDoc.method = 'Texto do PDF';
+    regDoc.method = 'Texto de exemplo (colado)';
     const newItems = sourceDocsToQueueItems([regDoc], employees);
     setQueue((prev) => [...prev, ...newItems]);
     setCurrentIndex(queue.length);

@@ -12,7 +12,16 @@ import {
   normalizeEmployeeAfterSave,
   REFERENCE_DOCTORS,
 } from './queueService';
-import { extractTextFromPdfBytes } from './xlsxWorkbookService';
+import PostalMime from 'postal-mime';
+import { strFromU8, unzipSync } from 'fflate';
+import { ocr } from './ingest/ocr';
+import { readPdf } from './ingest/pdf';
+import demoPeople from './demo/people.json';
+
+/** Formato que o leitor não consegue abrir, com instrução de como reenviar. */
+export class UnsupportedFileError extends Error {}
+
+const IMAGE_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'jfif']);
 
 export const COL = {
   matricula: 'MATRÍCULA',
@@ -308,327 +317,10 @@ interface DemoPersonProfile {
   multi?: string;
 }
 
-const DEMO_PEOPLE_REGISTRY: Record<string, DemoPersonProfile> = {
-  '20269001': {
-    matricula: '20269001',
-    nome: 'JOANA RIBEIRO SANTANA',
-    status: 'ATIVO',
-    nascimento: '11/02/1982',
-    idade: 44,
-    cpf: '412.809.315-20',
-    sexo: 'FEMININO',
-    entradaAps: '29/05/2024',
-    telefone: '(71) 99811-2201',
-    empresa: 'Alimentos Vale Verde Ltda',
-    medico: 'Dr. Felipe Andrade',
-    cargo: 'Operadora de Qualidade',
-    setor: 'Controle de Qualidade',
-    riscoInicial: 'RISCO 2',
-    riscoAtual: 'RISCO 2',
-    ultMedica: '05/06/2026',
-  },
-  '20269002': {
-    matricula: '20269002',
-    nome: 'RAFAEL MOURA TAVARES',
-    status: 'ATIVO',
-    nascimento: '18/10/1993',
-    idade: 33,
-    cpf: '529.410.885-04',
-    sexo: 'MASCULINO',
-    entradaAps: '12/05/2025',
-    telefone: '(71) 99742-3102',
-    empresa: 'Plásticos Recôncavo Ltda',
-    medico: 'Dra. Helena Matos',
-    cargo: 'Operador de Extrusão',
-    setor: 'Extrusão',
-  },
-  '20269003': {
-    matricula: '20269003',
-    nome: 'CAMILA FERREIRA LOPES',
-    status: 'ATIVO',
-    nascimento: '04/02/1985',
-    idade: 41,
-    cpf: '618.230.945-12',
-    sexo: 'FEMININO',
-    entradaAps: '22/10/2023',
-    telefone: '(71) 99615-4403',
-    empresa: 'Metalúrgica Atlântida Ltda',
-    medico: 'Dr. Ricardo Fontes',
-    cargo: 'Assistente Administrativa',
-    setor: 'Administrativo',
-    riscoInicial: 'RISCO 1',
-    riscoAtual: 'RISCO 1',
-    ultMedica: '04/05/2026',
-  },
-  '20269004': {
-    matricula: '20269004',
-    nome: 'MARCOS ANDRADE PIRES',
-    status: 'ATIVO',
-    nascimento: '26/06/1974',
-    idade: 52,
-    cpf: '309.514.775-68',
-    sexo: 'MASCULINO',
-    entradaAps: '21/01/2024',
-    telefone: '(71) 99834-5504',
-    empresa: 'Química Litoral Norte S.A.',
-    medico: 'Dra. Beatriz Campos',
-    cargo: 'Operador de Reatores',
-    setor: 'Processos Químicos',
-    ultMedica: '16/07/2026',
-    multi: 'NÃO',
-  },
-  '20269005': {
-    matricula: '20269005',
-    nome: 'LUCIANA PEIXOTO DIAS',
-    status: 'ATIVO',
-    nascimento: '23/12/1988',
-    idade: 37,
-    cpf: '741.602.395-91',
-    sexo: 'FEMININO',
-    entradaAps: '14/08/2024',
-    telefone: '(71) 99912-6605',
-    empresa: 'Têxtil Horizonte Ltda',
-    medico: 'Dr. Felipe Andrade',
-    cargo: 'Operadora de Tecelagem',
-    setor: 'Tecelagem',
-    ultMedica: '27/06/2026',
-  },
-  '20269006': {
-    matricula: '20269006',
-    nome: 'PAULO VIEIRA COSTA',
-    status: 'ATIVO',
-    nascimento: '16/09/1979',
-    idade: 47,
-    cpf: '852.190.445-30',
-    sexo: 'MASCULINO',
-    entradaAps: '07/06/2025',
-    telefone: '(71) 99708-7706',
-    empresa: 'Alimentos Vale Verde Ltda',
-    medico: 'Dra. Helena Matos',
-    cargo: 'Operador de Envase',
-    setor: 'Envase',
-    riscoInicial: 'RISCO 3',
-    riscoAtual: 'RISCO 3',
-    ultMedica: '16/06/2026',
-  },
-  '20269007': {
-    matricula: '20269007',
-    nome: 'ADRIANA MELO CARVALHO',
-    status: 'ATIVO',
-    nascimento: '17/09/1997',
-    idade: 29,
-    cpf: '914.320.515-44',
-    sexo: 'FEMININO',
-    entradaAps: '04/04/2025',
-    telefone: '(71) 99655-8807',
-    empresa: 'Plásticos Recôncavo Ltda',
-    medico: 'Dr. Ricardo Fontes',
-    cargo: 'Inspetora de Injeção',
-    setor: 'Injeção Plástica',
-    riscoInicial: 'RISCO 2',
-  },
-  '20269008': {
-    matricula: '20269008',
-    nome: 'GILBERTO NUNES ROCHA',
-    status: 'ATIVO',
-    nascimento: '20/12/1970',
-    idade: 55,
-    cpf: '207.884.195-53',
-    sexo: 'MASCULINO',
-    entradaAps: '15/03/2024',
-    telefone: '(71) 99870-9908',
-    empresa: 'Metalúrgica Atlântida Ltda',
-    medico: 'Dra. Beatriz Campos',
-    cargo: 'Soldador Industrial',
-    setor: 'Soldagem',
-    riscoInicial: 'RISCO 2',
-    ultMedica: '27/08/2026',
-  },
-  '20269009': {
-    matricula: '20269009',
-    nome: 'SANDRA REIS MOTA',
-    status: 'ATIVO',
-    nascimento: '09/09/1991',
-    idade: 35,
-    cpf: '381.902.675-18',
-    sexo: 'FEMININO',
-    entradaAps: '27/07/2024',
-    telefone: '(71) 99714-1009',
-    empresa: 'Química Litoral Norte S.A.',
-    medico: 'Dr. Felipe Andrade',
-    cargo: 'Técnica de Laboratório',
-    setor: 'Laboratório Químico',
-    ultMedica: '13/08/2026',
-  },
-  '20269010': {
-    matricula: '20269010',
-    nome: 'EDUARDO LIMA FONTES',
-    status: 'ATIVO',
-    nascimento: '14/07/1984',
-    idade: 42,
-    cpf: '490.215.835-72',
-    sexo: 'MASCULINO',
-    entradaAps: '27/07/2023',
-    telefone: '(71) 99825-2010',
-    empresa: 'Têxtil Horizonte Ltda',
-    medico: 'Dra. Helena Matos',
-    cargo: 'Operador de Acabamento',
-    setor: 'Acabamento',
-    riscoInicial: 'RISCO 1',
-    riscoAtual: 'RISCO 1',
-  },
-  '20269011': {
-    matricula: '20269011',
-    nome: 'BEATRIZ SOARES CUNHA',
-    status: 'ATIVO',
-    nascimento: '12/08/1999',
-    idade: 27,
-    cpf: '536.718.905-09',
-    sexo: 'FEMININO',
-    entradaAps: '01/08/2025',
-    telefone: '(71) 99691-3011',
-    empresa: 'Alimentos Vale Verde Ltda',
-    medico: 'Dr. Ricardo Fontes',
-    cargo: 'Auxiliar de Logística Fria',
-    setor: 'Logística',
-    riscoInicial: 'RISCO 3',
-    riscoAtual: 'RISCO 3',
-  },
-  '20269012': {
-    matricula: '20269012',
-    nome: 'VAGNER ALVES BRITO',
-    status: 'ATIVO',
-    nascimento: '27/01/1987',
-    idade: 39,
-    cpf: '642.839.105-81',
-    sexo: 'MASCULINO',
-    entradaAps: '25/10/2023',
-    telefone: '(71) 99733-4012',
-    empresa: 'Plásticos Recôncavo Ltda',
-    medico: 'Dra. Beatriz Campos',
-    cargo: 'Operador de Manutenção',
-    setor: 'Manutenção',
-    ultMedica: '24/08/2026',
-  },
-  '20269013': {
-    matricula: '20269013',
-    nome: 'PRISCILA DANTAS SALES',
-    status: 'ATIVO',
-    nascimento: '15/05/1995',
-    idade: 31,
-    cpf: '719.405.285-36',
-    sexo: 'FEMININO',
-    entradaAps: '02/08/2025',
-    telefone: '(71) 99888-5013',
-    empresa: 'Metalúrgica Atlântida Ltda',
-    medico: 'Dr. Felipe Andrade',
-    cargo: 'Operadora de Usinagem',
-    setor: 'Usinagem',
-  },
-  '20269014': {
-    matricula: '20269014',
-    nome: 'RENATO CASTRO LEAL',
-    status: 'ATIVO',
-    nascimento: '12/08/1968',
-    idade: 58,
-    cpf: '825.619.345-27',
-    sexo: 'MASCULINO',
-    entradaAps: '09/04/2023',
-    telefone: '(71) 99642-6014',
-    empresa: 'Química Litoral Norte S.A.',
-    medico: 'Dra. Helena Matos',
-    cargo: 'Supervisor de Utilidades',
-    setor: 'Utilidades',
-    ultMedica: '04/03/2026',
-    multi: 'NÃO',
-  },
-  '20269015': {
-    matricula: '20269015',
-    nome: 'ÉRICA MENEZES PORTO',
-    status: 'ATIVO',
-    nascimento: '20/02/1980',
-    idade: 46,
-    cpf: '930.147.625-14',
-    sexo: 'FEMININO',
-    entradaAps: '23/03/2025',
-    telefone: '(71) 99904-7015',
-    empresa: 'Têxtil Horizonte Ltda',
-    medico: 'Dr. Ricardo Fontes',
-    cargo: 'Revisora Têxtil',
-    setor: 'Qualidade Têxtil',
-    riscoInicial: 'RISCO 1',
-    riscoAtual: 'RISCO 1',
-  },
-  '20269016': {
-    matricula: '20269016',
-    nome: 'CLÁUDIO BARROS MAIA',
-    status: 'ATIVO',
-    nascimento: '01/03/1976',
-    idade: 50,
-    cpf: '148.920.735-60',
-    sexo: 'MASCULINO',
-    entradaAps: '17/11/2023',
-    telefone: '(71) 99761-8016',
-    empresa: 'Alimentos Vale Verde Ltda',
-    medico: 'Dra. Beatriz Campos',
-    cargo: 'Operador de Forno Industrial',
-    setor: 'Produção Térmica',
-    riscoInicial: 'RISCO 3',
-    riscoAtual: 'RISCO 3',
-  },
-  '20269017': {
-    matricula: '20269017',
-    nome: 'NATÁLIA FREIRE AZEVEDO',
-    status: 'ATIVO',
-    nascimento: '20/03/1992',
-    idade: 34,
-    cpf: '259.301.845-92',
-    sexo: 'FEMININO',
-    entradaAps: '16/06/2025',
-    telefone: '(71) 99819-9017',
-    empresa: 'Plásticos Recôncavo Ltda',
-    medico: 'Dr. Felipe Andrade',
-    cargo: 'Analista de PCP',
-    setor: 'Planejamento e Controle',
-    riscoInicial: 'RISCO 3',
-    riscoAtual: 'RISCO 3',
-  },
-  '20269018': {
-    matricula: '20269018',
-    nome: 'FERNANDA LIMA QUEIROZ',
-    status: 'ATIVO',
-    nascimento: '17/05/2000',
-    idade: 26,
-    cpf: '367.412.955-08',
-    sexo: 'FEMININO',
-    entradaAps: '26/02/2024',
-    telefone: '(71) 99677-1018',
-    empresa: 'Metalúrgica Atlântida Ltda',
-    medico: 'Dra. Helena Matos',
-    cargo: 'Operadora de Estamparia',
-    setor: 'Estamparia',
-    riscoInicial: 'RISCO 2',
-    riscoAtual: 'RISCO 2',
-  },
-  '20269019': {
-    matricula: '20269019',
-    nome: 'JORGE MATOS ARAGÃO',
-    status: 'ATIVO',
-    nascimento: '12/11/1965',
-    idade: 61,
-    cpf: '478.523.065-41',
-    sexo: 'MASCULINO',
-    entradaAps: '14/08/2025',
-    telefone: '(71) 99852-2019',
-    empresa: 'Química Litoral Norte S.A.',
-    medico: 'Dr. Ricardo Fontes',
-    cargo: 'Operador de Estação de Tratamento',
-    setor: 'Meio Ambiente / ETE',
-    riscoInicial: 'RISCO 3',
-    riscoAtual: 'RISCO 3',
-    ultMedica: '23/05/2026',
-  },
-};
+/** Fonte única: `src/demo/people.json` (também usada por `scripts/make-demo.mjs` para gerar os anexos). */
+const DEMO_PEOPLE_REGISTRY: Record<string, DemoPersonProfile> = Object.fromEntries(
+  (demoPeople as DemoPersonProfile[]).map((p) => [p.matricula, p])
+);
 
 /* ================================================================== */
 /* Utilitários de Texto, Datas e Hash SHA-256                          */
@@ -836,7 +528,10 @@ export function findMatchingEmployee(
     }
     if (best && best.score >= 0.66) return best;
   }
-  if (fullText) {
+  // Busca do nome no texto só quando o documento não identifica ninguém. Se ele traz matrícula
+  // ou nome que não estão na base, é outra pessoa (evita casar "Luciana Peixoto Dias" com
+  // "Luciana Nascimento Freitas" só porque o PDF tem o rótulo "Nascimento").
+  if (fullText && !id.matricula && !id.nome) {
     const f = ` ${fold(fullText).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ')} `;
     let best: PersonMatchResult | undefined;
     for (const p of employees) {
@@ -1309,10 +1004,8 @@ export function extractCuidado(lines: string[]): Extraction {
   }
 
   const ficha = fichaDate(lines);
-  if (ficha) {
-    proposals.push({ key: 'coordData', value: fmtDate(ficha.value), evidence: evidence(ficha.line) });
-    proposals.push({ key: 'ultMedica', value: fmtDate(ficha.value), evidence: evidence(ficha.line), onlyIfEmpty: true });
-  }
+  // A ficha de Gestão do Cuidado é coordenação, não consulta médica: a data vai só para coordData.
+  if (ficha) proposals.push({ key: 'coordData', value: fmtDate(ficha.value), evidence: evidence(ficha.line) });
 
   const multiHit = findLabel(lines, /equipe multiprofissional/);
   if (multiHit) {
@@ -1834,121 +1527,25 @@ export function analyzeSourceDoc(doc: SourceDoc): Extraction[] {
 let docSeq = 0;
 const nextDocId = () => `doc-${Date.now().toString(36)}-${++docSeq}`;
 
-function inferRefDate(text: string): Date {
-  return firstDate(text, 2026) ?? new Date(2026, 10, 14);
-}
-
 /**
- * Textos OCR reconhecidos localmente para imagens e PDFs escaneados sem camada de texto
+ * Data de referência de uma mensagem (base: secilita_planilhas): primeiro carimbo "data hora"
+ * (WhatsApp, print de conversa), depois cabeçalho (Date/Data/Enviado em), depois a primeira
+ * data com ano. Assim "Confirmo a consulta do dia 25/11 ... 13/11/2026 07:48" usa 13/11 como
+ * data do contato, e não a data citada no texto.
  */
-const KNOWN_OCR_IMAGE_TEXTS: Record<string, string> = {
-  '02_foto-gestao-retorno_rafael.jpg': [
-    'GESTÃO DE RETORNO',
-    'Funcionário (Código / Nome): 20269002 - RAFAEL MOURA TAVARES',
-    'Empresa: Plásticos Coqueiral Ltda',
-    'Unidade: Unidade Demo   Setor: Produção',
-    'Cargo: Operador(a)   Idade: 33',
-    'Nascimento: 18/10/1993   Admissão: 12/05/2025',
-    'Tipo de Exame: Monitoramento',
-    'Gestão do Retorno: Monitoramento',
-    'Data do monitoramento: 05/11/2026',
-    'Médico de referência na APS: Dra. Teresa Brandão',
-    'Classificação de risco de saúde: Saudável com risco',
-    'Verificação de adesão ao plano de cuidado: A cada 6 meses',
-    'Data da última consulta médica: 14/08/2026',
-    'Atendimento com equipe multiprofissional: Sim',
-    'Dados do Retorno',
-    'Retorno da consulta médica e/ou com a equipe - data prevista: 14/02/2027',
-    'Status plano de cuidado: Aderiu parcialmente',
-    'Feito contato: Sim',
-    'Desfecho do monitoramento',
-    'Agendamento realizado: Sim',
-    'Mensagem enviada: Sim',
-    'Aguardando retorno: Não',
-    'Observações do contato realizado: Retorno agendado no turno da manhã',
-    'Data prevista para o próximo monitoramento: 05/02/2027',
-  ].join('\n'),
-  '04_gestao-cuidado_marcos_escaneado.pdf': [
-    'GESTÃO DO CUIDADO',
-    'Funcionário (Código / Nome): 20269004 - MARCOS ANDRADE PIRES',
-    'Empresa: Química Lagoa Azul S.A.',
-    'Unidade: Unidade Demo   Setor: Produção',
-    'Cargo: Operador(a)   Idade: 52',
-    'Nascimento: 26/06/1974   Admissão: 21/01/2024',
-    'Tipo de Exame: Monitoramento   Data Ficha: 28/10/2026',
-    'Data de inclusão ao Programa Bem Cuidar',
-    'Informe a Data de Ativação da vida no Programa: 12/03/2025',
-    'Questionário',
-    'Qual o tipo de atendimento? Presencial',
-    'Classificação do serviço: Coordenação do cuidado',
-    'Estado civil: Casado(a)   Escolaridade: Médio Completo',
-    'Classificação do paciente quanto ao risco',
-    '2- saudável com risco',
-    'Observações sobre a classificação do risco à saúde: relata dor lombar ocasional após o turno, sem outras queixas no momento.',
-    'Atendimento com equipe multiprofissional: Não',
-    '1- HIPERTENSÃO ARTERIAL: Não',
-    '2- DIABETES MELLITUS: Não',
-    'Medicamentos em uso: Não',
-    'TABAGISMO: Não fumante',
-  ].join('\n'),
-  '13_print-conversa_fernanda.png': [
-    'Fernanda Lima Queiroz',
-    'Bom dia! Confirmo minha consulta do dia 25/11 às 9h. Obrigada!',
-    '13/11/2026 07:48',
-  ].join('\n'),
-};
-
-async function unzipEntriesNative(buffer: ArrayBuffer): Promise<Record<string, Uint8Array>> {
-  const bytes = new Uint8Array(buffer);
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let eocdOffset = -1;
-  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
-    if (view.getUint32(i, true) === 0x06054b50) {
-      eocdOffset = i;
-      break;
-    }
+function inferRefDate(text: string, fallback = new Date(2026, 10, 14)): Date {
+  const stamp = /(\d{1,2}\/\d{1,2}\/\d{4})[,\s]+\d{1,2}:\d{2}/.exec(text);
+  if (stamp) return findDates(stamp[1])[0] ?? fallback;
+  const header = /^(?:date|data|enviad[oa] em|sent|recebid[oa] em)\s*:?\s*(.+)$/im.exec(text);
+  if (header) {
+    const d = findDates(header[1])[0];
+    if (d) return d;
+    const parsed = new Date(header[1]);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
   }
-  if (eocdOffset < 0) return {};
-
-  const totalEntries = view.getUint16(eocdOffset + 10, true);
-  const cdOffset = view.getUint32(eocdOffset + 16, true);
-  const out: Record<string, Uint8Array> = {};
-  let ptr = cdOffset;
-  const decoder = new TextDecoder('utf-8');
-
-  for (let i = 0; i < totalEntries; i++) {
-    if (ptr + 46 > bytes.length || view.getUint32(ptr, true) !== 0x02014b50) break;
-    const method = view.getUint16(ptr + 10, true);
-    const compSize = view.getUint32(ptr + 20, true);
-    const nameLen = view.getUint16(ptr + 28, true);
-    const extraLen = view.getUint16(ptr + 30, true);
-    const commentLen = view.getUint16(ptr + 32, true);
-    const localHeaderOffset = view.getUint32(ptr + 42, true);
-    const name = decoder.decode(bytes.subarray(ptr + 46, ptr + 46 + nameLen));
-    ptr += 46 + nameLen + extraLen + commentLen;
-
-    if (localHeaderOffset + 30 > bytes.length) continue;
-    const lNameLen = view.getUint16(localHeaderOffset + 26, true);
-    const lExtraLen = view.getUint16(localHeaderOffset + 28, true);
-    const dataStart = localHeaderOffset + 30 + lNameLen + lExtraLen;
-    const compBytes = bytes.subarray(dataStart, dataStart + compSize);
-
-    if (method === 0) {
-      out[name] = compBytes;
-    } else if (method === 8 && typeof DecompressionStream !== 'undefined') {
-      try {
-        const ds = new DecompressionStream('deflate-raw');
-        const writer = ds.writable.getWriter();
-        const writeP = writer.write(compBytes).then(() => writer.close());
-        const readP = new Response(ds.readable).arrayBuffer();
-        const [, ab] = await Promise.all([writeP, readP]);
-        out[name] = new Uint8Array(ab);
-      } catch {
-        // Ignora entrada corrompida
-      }
-    }
-  }
-  return out;
+  const full = /\b\d{1,2}\/\d{1,2}\/\d{4}\b/.exec(text);
+  if (full) return findDates(full[0])[0] ?? fallback;
+  return firstDate(text, 2026) ?? fallback;
 }
 
 function officeXmlToText(xml: string): string {
@@ -1967,6 +1564,7 @@ function htmlToPlainText(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(?:p|div|tr|li|h[1-6]|table)>/gi, '\n')
     .replace(/<\/(?:td|th)>/gi, '  ')
@@ -2064,32 +1662,6 @@ function parseCsvRecords(text: string): FlatRecord[] {
   });
 }
 
-function extractEmbeddedJpegFromPdf(buffer: ArrayBuffer): string | undefined {
-  const bytes = new Uint8Array(buffer);
-  // Procura marcador JPEG SOI (FF D8 FF) e EOI (FF D9) dentro do PDF escaneado
-  let start = -1;
-  for (let i = 0; i < bytes.length - 3; i++) {
-    if (bytes[i] === 0xff && bytes[i + 1] === 0xd8 && bytes[i + 2] === 0xff) {
-      start = i;
-      break;
-    }
-  }
-  if (start < 0) return undefined;
-  let end = -1;
-  for (let i = bytes.length - 2; i > start + 100; i--) {
-    if (bytes[i] === 0xff && bytes[i + 1] === 0xd9) {
-      end = i + 2;
-      break;
-    }
-  }
-  if (end < 0) return undefined;
-  const jpgBytes = bytes.subarray(start, end);
-  if (typeof URL !== 'undefined' && typeof Blob !== 'undefined') {
-    return URL.createObjectURL(new Blob([jpgBytes], { type: 'image/jpeg' }));
-  }
-  return undefined;
-}
-
 export async function readImportedFile(
   file: File,
   parent?: string
@@ -2104,209 +1676,146 @@ export async function readImportedFile(
   const sizeBytes = buffer.byteLength;
   const mimeType = file.type || 'application/octet-stream';
 
-  // 1. PDF (digital ou escaneado)
+  const base = {
+    name,
+    parent,
+    file,
+    sha256Hash,
+    sizeBytes,
+  };
+
+  // 1. PDF digital (camada de texto via pdf.js) ou escaneado (página renderizada + OCR local)
   if (ext === 'pdf' || mimeType === 'application/pdf') {
-    let text = await extractTextFromPdfBytes(buffer);
-    let method = 'Texto do PDF';
-    let previewImageUrl: string | undefined;
-
-    if (text.replace(/\s/g, '').length < 40) {
-      method = 'OCR local (PDF escaneado)';
-      previewImageUrl = extractEmbeddedJpegFromPdf(buffer);
-      text =
-        KNOWN_OCR_IMAGE_TEXTS[name] ||
-        [
-          `DOCUMENTO DIGITALIZADO ESCANEADO: ${name}`,
-          `Data Ficha: ${fmtDate(new Date(2026, 10, 15))}`,
-          'Classificação do serviço: Coordenação do cuidado',
-        ].join('\n');
-    }
-
+    const { text, method, previewImageUrl } = await readPdf(buffer);
     return [
       {
+        ...base,
         id: nextDocId(),
-        name,
-        parent,
         channel: 'pdf',
         method,
         text,
         refDate: inferRefDate(text),
         ms: ms(),
-        file,
         previewImageUrl,
-        sha256Hash,
-        sizeBytes,
         mimeType: 'application/pdf',
       },
     ];
   }
 
-  // 2. Imagens / Fotos (JPG, PNG, WebP)
-  if (['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif'].includes(ext) || mimeType.startsWith('image/')) {
-    const previewImageUrl =
-      typeof URL !== 'undefined' ? URL.createObjectURL(file) : undefined;
-    const text =
-      KNOWN_OCR_IMAGE_TEXTS[name] ||
-      [
-        `GESTÃO DE RETORNO · IMAGEM LIDA VIA OCR (${name})`,
-        `Data do monitoramento: 15/11/2026`,
-        'Classificação de risco de saúde: Saudável com risco',
-        'Feito contato: Sim',
-        'Agendamento realizado: Sim',
-      ].join('\n');
+  if (ext === 'heic' || ext === 'heif') {
+    throw new UnsupportedFileError(
+      'Foto HEIC do iPhone: o navegador não abre este formato. Envie em JPG (Ajustes › Câmera › Formatos › Mais compatível) ou faça um print da tela.'
+    );
+  }
+  if (ext === 'msg') {
+    throw new UnsupportedFileError(
+      'E-mail do Outlook (.msg): use "Salvar como" › .eml, ou encaminhe o PDF/anexo diretamente.'
+    );
+  }
 
+  // 2. Imagens / fotos / prints de tela: OCR local (Tesseract, português)
+  if (IMAGE_EXT.has(ext) || mimeType.startsWith('image/')) {
+    const previewImageUrl =
+      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+        ? URL.createObjectURL(file)
+        : undefined;
+    const text = await ocr(file);
     return [
       {
+        ...base,
         id: nextDocId(),
-        name,
-        parent,
         channel: 'foto',
         method: 'OCR local (imagem)',
         text,
         refDate: inferRefDate(text),
         ms: ms(),
-        file,
         previewImageUrl,
-        sha256Hash,
-        sizeBytes,
         mimeType: mimeType || 'image/jpeg',
       },
     ];
   }
 
-  // 3. E-mail (.eml com suporte a anexos em base64)
+  // 3. E-mail .eml: corpo + cada anexo lido de novo, de forma recursiva
   if (ext === 'eml' || mimeType === 'message/rfc822') {
-    const rawEml = new TextDecoder('utf-8').decode(buffer);
-    const subjRaw = /^Subject:\s*(.+)$/im.exec(rawEml)?.[1]?.trim() ?? '';
-    const subject = subjRaw.replace(/=\?UTF-8\?Q\?([^?]+)\?=/gi, (_, q: string) => {
-      try {
-        return decodeURIComponent(q.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, '%$1'));
-      } catch {
-        return q;
-      }
-    });
-    const dateRaw = /^Date:\s*(.+)$/im.exec(rawEml)?.[1]?.trim();
-    const refDate = dateRaw && !Number.isNaN(Date.parse(dateRaw)) ? new Date(dateRaw) : new Date(2026, 10, 12);
-
-    const boundaryMatch = /boundary="([^"]+)"/i.exec(rawEml);
-    let bodyText = '';
-    const childDocs: SourceDoc[] = [];
-
-    if (boundaryMatch) {
-      const parts = rawEml.split(`--${boundaryMatch[1]}`);
-      for (const part of parts) {
-        if (/Content-Type:\s*text\/plain/i.test(part)) {
-          const splitPart = part.split(/\r?\n\r?\n/);
-          const payload = splitPart.slice(1).join('\n').trim();
-          if (/Content-Transfer-Encoding:\s*base64/i.test(part)) {
-            try {
-              const bin = atob(payload.replace(/\s+/g, ''));
-              const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-              bodyText = new TextDecoder('utf-8').decode(bytes);
-            } catch {
-              bodyText = payload;
-            }
-          } else {
-            bodyText = payload;
-          }
-        } else if (/Content-Disposition:\s*attachment/i.test(part)) {
-          const fnMatch = /filename="([^"]+)"/i.exec(part);
-          const ctMatch = /Content-Type:\s*([^;\r\n]+)/i.exec(part);
-          const splitPart = part.split(/\r?\n\r?\n/);
-          const b64 = splitPart.slice(1).join('').replace(/--$/, '').replace(/\s+/g, '');
-          if (b64) {
-            try {
-              const bin = atob(b64);
-              const attBytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-              const attFile = new File([attBytes], fnMatch?.[1] ?? 'anexo.pdf', {
-                type: ctMatch?.[1]?.trim() ?? 'application/pdf',
-              });
-              childDocs.push(...(await readImportedFile(attFile, name)));
-            } catch {
-              // Ignora anexo malformado
-            }
-          }
-        }
-      }
-    } else {
-      bodyText = rawEml.split(/\r?\n\r?\n/).slice(1).join('\n').trim();
-    }
-
-    const fullEmailText = `Assunto: ${subject}\n${bodyText.trim()}`;
-    return [
+    const mail = await PostalMime.parse(buffer);
+    const body = mail.text?.trim() || (mail.html ? htmlToPlainText(mail.html) : '');
+    const refDate = mail.date && !Number.isNaN(Date.parse(mail.date)) ? new Date(mail.date) : inferRefDate(body);
+    const out: SourceDoc[] = [
       {
+        ...base,
         id: nextDocId(),
-        name,
-        parent,
         channel: 'email',
         method: 'E-mail (corpo)',
-        text: fullEmailText,
+        text: `Assunto: ${mail.subject ?? ''}\n${body}`,
         refDate,
         ms: ms(),
-        file,
-        sha256Hash,
-        sizeBytes,
         mimeType: 'message/rfc822',
       },
-      ...childDocs,
     ];
+    for (const att of mail.attachments ?? []) {
+      const content =
+        typeof att.content === 'string'
+          ? new TextEncoder().encode(att.content)
+          : new Uint8Array(att.content);
+      const child = new File([content as Uint8Array<ArrayBuffer>], att.filename ?? 'anexo', {
+        type: att.mimeType,
+      });
+      try {
+        out.push(...(await readImportedFile(child, name)));
+      } catch (err) {
+        if (!(err instanceof UnsupportedFileError)) throw err;
+      }
+    }
+    return out;
   }
 
   // 4. Arquivos compactados (.zip), Word (.docx) e OpenDocument (.odt)
   if (ext === 'zip' || ext === 'docx' || ext === 'odt') {
-    const entries = await unzipEntriesNative(buffer);
-    const decoder = new TextDecoder('utf-8');
-    if (ext === 'docx' || entries['word/document.xml']) {
-      const xml = decoder.decode(entries['word/document.xml'] ?? new Uint8Array());
-      const text = officeXmlToText(xml);
+    const entries = unzipSync(new Uint8Array(buffer));
+    const officeXml = entries['word/document.xml'] ?? entries['content.xml'];
+    if (ext === 'docx' || ext === 'odt' || officeXml) {
+      const text = officeXmlToText(strFromU8(officeXml ?? new Uint8Array()));
       return [
         {
+          ...base,
           id: nextDocId(),
-          name,
-          parent,
           channel: 'texto',
-          method: 'Documento Word',
+          method: entries['word/document.xml'] ? 'Documento Word' : 'Documento ODT',
           text,
           refDate: inferRefDate(text),
           ms: ms(),
-          file,
-          sha256Hash,
-          sizeBytes,
-          mimeType,
-        },
-      ];
-    }
-    if (ext === 'odt' || entries['content.xml']) {
-      const xml = decoder.decode(entries['content.xml'] ?? new Uint8Array());
-      const text = officeXmlToText(xml);
-      return [
-        {
-          id: nextDocId(),
-          name,
-          parent,
-          channel: 'texto',
-          method: 'Documento ODT',
-          text,
-          refDate: inferRefDate(text),
-          ms: ms(),
-          file,
-          sha256Hash,
-          sizeBytes,
           mimeType,
         },
       ];
     }
     const childDocs: SourceDoc[] = [];
     for (const [entryPath, entryBytes] of Object.entries(entries)) {
-      if (entryPath.endsWith('/') || entryPath.startsWith('__MACOSX')) continue;
+      if (entryPath.endsWith('/') || entryPath.startsWith('__MACOSX') || /(^|\/)\./.test(entryPath)) {
+        continue;
+      }
       const childName = entryPath.split('/').pop() ?? entryPath;
       const childFile = new File([entryBytes as Uint8Array<ArrayBuffer>], childName);
-      childDocs.push(...(await readImportedFile(childFile, name)));
+      try {
+        childDocs.push(...(await readImportedFile(childFile, name)));
+      } catch (err) {
+        if (!(err instanceof UnsupportedFileError)) throw err;
+      }
+    }
+    if (!childDocs.length) {
+      throw new UnsupportedFileError('O .zip não tem nenhum arquivo em formato reconhecido.');
     }
     return childDocs;
   }
 
   // 5. Texto, JSON, XML, CSV, HTML
+  const raw = new Uint8Array(buffer);
+  let zeros = 0;
+  for (let i = 0; i < Math.min(raw.length, 4000); i++) if (raw[i] === 0) zeros++;
+  if (zeros > 2) {
+    throw new UnsupportedFileError(
+      `Formato .${ext || '?'} não reconhecido. Envie como PDF, imagem, e-mail (.eml), Word, XML, JSON, CSV ou texto.`
+    );
+  }
   const text = new TextDecoder('utf-8').decode(buffer);
   const trimmed = text.trimStart();
 

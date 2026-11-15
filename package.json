@@ -4,23 +4,33 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "concurrently -k \"tsx server/index.ts\" \"vite\"",
+    "predev:web": "node scripts/copy-ocr-assets.mjs",
     "dev:web": "vite",
     "dev:server": "tsx server/index.ts",
     "sync:csv": "tsx scripts/syncSesiSpreadsheet.ts",
     "cron:bot": "tsx scripts/activeSearchCron.ts",
     "audit": "tsx scripts/auditRules.ts",
+    "prebuild": "node scripts/copy-ocr-assets.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets": "node scripts/copy-ocr-assets.mjs",
+    "demo": "tsx scripts/makeDemoDocuments.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.1",
+    "fflate": "^0.8.3",
     "lucide-react": "^0.460.0",
+    "pdfjs-dist": "^6.5.438",
+    "postal-mime": "^4.2.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@tesseract.js-data/por": "^1.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.9.0",
@@ -29,6 +39,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
+    "pdf-lib": "^1.17.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "tsx": "^4.19.2",

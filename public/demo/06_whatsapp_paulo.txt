@@ -1,4 +1,4 @@
-[11/11/2026, 09:02:13] Equipe Ponte Saúde: Olá, Paulo! Seu retorno com o médico de família está previsto para este mês. Podemos marcar no seu turno?
+[11/11/2026, 09:02:13] Equipe SESI Saúde Acolhe: Olá, Paulo! Seu retorno com o médico de família está previsto para este mês. Podemos marcar na janela protegida do seu turno?
 [11/11/2026, 12:40:51] Paulo Vieira: Boa tarde. Pode marcar sim, consigo ir dia 19/11 de manhã antes do turno
-[11/11/2026, 12:41:30] Equipe Ponte Saúde: Combinado, 19/11 às 07h30. Até lá!
+[11/11/2026, 12:41:30] Equipe SESI Saúde Acolhe: Combinado, 19/11 às 07h30. Seu Passe de Cuidado vale como autorização para o líder. Até lá!
 [11/11/2026, 12:42:02] Paulo Vieira: Confirmado, obrigado

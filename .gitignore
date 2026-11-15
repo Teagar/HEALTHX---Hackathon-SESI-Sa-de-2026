@@ -10,3 +10,6 @@ dist/
 .env.*
 .DS_Store
 Thumbs.db
+
+# OCR local copiado de node_modules (npm run assets)
+public/ocr/
