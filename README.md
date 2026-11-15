@@ -160,6 +160,14 @@ public/demo/                    # 14 documentos de exemplo (fictícios)
 
 ## Equipe e créditos
 
+Criado por:
+
+- Calyson Andrade Britto
+- Carlos Henrique Gonzaga Lima
+- Gabriel Boaventura Silva
+- Pedro Henrique Silva Souza Filho
+- Thiago Bastos Cerqueira
+
 - Repositório original do protótipo: [CalysonB/HEALTHX---Hackathon-SESI-Sa-de-2026](https://github.com/CalysonB/HEALTHX---Hackathon-SESI-Sa-de-2026)
 - Leitor de documentos baseado em [Teagar/SECILITA_PLANILHAS](https://github.com/Teagar/SECILITA_PLANILHAS)
 - Projeto de demonstração para o Hackathon SESI Saúde 2026. Todos os dados são fictícios.

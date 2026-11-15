@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, ShieldCheck, Stethoscope } from 'lucide-react';
+import { ArrowRight, BarChart3, Info, ShieldCheck, Stethoscope, Users } from 'lucide-react';
 import type { AppRoute } from '../types';
 
 export interface LandingPortalProps {
@@ -57,6 +57,19 @@ const CARDS: {
   },
 ];
 
+const CREATORS = [
+  'Calyson Andrade Britto',
+  'Carlos Henrique Gonzaga Lima',
+  'Gabriel Boaventura Silva',
+  'Pedro Henrique Silva Souza Filho',
+  'Thiago Bastos Cerqueira',
+];
+
+function initials(name: string): string {
+  const parts = name.split(' ');
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export function LandingPortal({
   onNavigate,
   totalEmployees,
@@ -110,6 +123,24 @@ export function LandingPortal({
           </dl>
         </header>
 
+        <div className="space-y-5">
+          <div
+            role="note"
+            className="mx-auto flex max-w-3xl items-start gap-3 rounded-xl border border-[#F5DFB8] bg-[#FDF7EC] px-4 py-3 text-left"
+          >
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C26D27] text-white">
+              <Info className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <p className="text-[12.5px] leading-relaxed text-[#7A4A1E]">
+              <strong className="font-semibold text-[#5C3714]">Acesso livre só nesta demonstração.</strong>{' '}
+              Os três ambientes abaixo estão abertos para a banca conhecer o sistema. Na aplicação real,
+              cada usuário entra com login e acessa <strong className="font-semibold">apenas a sua rota</strong>:
+              a equipe de saúde vê <code className="font-mono text-[11.5px]">/home</code>, a coordenação vê{' '}
+              <code className="font-mono text-[11.5px]">/admin</code> e o gestor da empresa vê só{' '}
+              <code className="font-mono text-[11.5px]">/gestor</code>, com dados anônimos.
+            </p>
+          </div>
+
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {CARDS.map((card) => {
             const Icon = card.icon;
@@ -153,9 +184,30 @@ export function LandingPortal({
           })}
         </div>
 
-        <p className="text-center text-[11px] text-[#98A2B3]">
-          Demonstração do Hackathon SESI Saúde 2026 · todos os dados são fictícios
-        </p>
+        </div>
+
+        <footer className="flex flex-col items-center gap-3 border-t border-[#D5DAE1] pt-8 text-center">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#475467]">
+            <Users className="h-3.5 w-3.5" aria-hidden="true" />
+            Criado por
+          </span>
+          <ul className="flex flex-wrap justify-center gap-2">
+            {CREATORS.map((name) => (
+              <li
+                key={name}
+                className="inline-flex items-center gap-2 rounded-full border border-[#E4E7EC] bg-white py-1 pl-1 pr-3 text-[12px] font-medium text-[#344054] shadow-xs"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ECF8F3] text-[10px] font-semibold text-[#0E7A5F]">
+                  {initials(name)}
+                </span>
+                {name}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-[#98A2B3]">
+            Hackathon SESI Saúde 2026 · todos os dados são fictícios
+          </p>
+        </footer>
       </div>
     </div>
   );
