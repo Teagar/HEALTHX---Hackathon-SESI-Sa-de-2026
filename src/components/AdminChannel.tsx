@@ -128,7 +128,7 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
-            Painel Epidemiológico & Economia em Saúde
+            Painel Epidemiológico & Eficiência Operacional APS
           </button>
 
           <button
@@ -206,27 +206,30 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
 
               <div className="bg-[#1F564C] text-white rounded-2xl p-5 shadow-xs">
                 <div className="flex items-center justify-between text-[#C6E4DA] mb-1.5">
-                  <span className="text-xs font-medium">Economia Assistencial Anual</span>
+                  <span className="text-xs font-medium">Horas Produtivas Preservadas</span>
                   <BookOpenCheck className="w-4 h-4 text-[#C6E4DA]" />
                 </div>
                 <div className="text-2xl font-bold tabular-nums">
-                  {formatBrl(analytics.healthImpact.totalEstimatedAnnualImpactBrl)}
+                  {analytics.healthImpact.productiveHoursPreserved}h/ano{' '}
+                  <span className="text-xs font-semibold text-[#C6E4DA]">
+                    ({Math.round(analytics.healthImpact.productiveHoursPreserved / 8)} turnos)
+                  </span>
                 </div>
                 <p className="text-[11px] text-[#E6F2EE] mt-1">
-                  Cálculo proporcional às {analytics.healthImpact.activeLivesScope} vidas ativas
+                  {analytics.healthImpact.accompaniedLivesScope} de {analytics.healthImpact.activeLivesScope} vidas ativas acompanhadas na APS
                 </p>
               </div>
             </div>
 
-            {/* Economia Assistencial e Produtiva com Fontes Epidemiológicas Reais */}
+            {/* Indicadores de Eficiência Operacional, Cobertura APS e Produtividade no Turno */}
             <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 sm:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#EFECE6] pb-4">
                 <div>
                   <h2 className="text-sm font-bold text-[#1E2926]">
-                    Retorno Operacional e Economia em Saúde Ocupacional (Baseado nos Dados Inseridos)
+                    Indicadores de Eficiência da Coordenação do Cuidado & Preservação Produtiva (Baseado nos Dados da Planilha)
                   </h2>
                   <p className="text-xs text-[#5A6561] mt-0.5">
-                    Indicadores calculados proporcionalmente aos {analytics.healthImpact.activeLivesScope} funcionários ativos, {analytics.healthImpact.accompaniedLivesScope} acompanhados e {analytics.healthImpact.recoveredConsultationsCount} agendamentos recuperados.
+                    Métricas operacionais extraídas diretamente das 32 colunas da base oficial ({analytics.healthImpact.activeLivesScope} funcionários ativos, {analytics.healthImpact.accompaniedLivesScope} com avaliação de risco e plano de cuidado, e {analytics.healthImpact.recoveredConsultationsCount} agendamentos sincronizados).
                   </p>
                 </div>
               </div>
@@ -234,16 +237,16 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-[#FAF9F6] border border-[#E5E0D5] space-y-1.5">
                   <div className="text-xs font-semibold text-[#5A6561]">
-                    Preservação de Horas Produtivas no Turno
+                    1. Horas Produtivas Preservadas nas Janelas de Turno
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(analytics.healthImpact.productiveHoursValueBrl)}{' '}
+                    {analytics.healthImpact.productiveHoursPreserved}h/ano{' '}
                     <span className="text-xs font-semibold text-[#1F564C]">
-                      ({analytics.healthImpact.productiveHoursPreserved}h/ano)
+                      ({formatBrl(analytics.healthImpact.productiveHoursValueBrl)} em produção)
                     </span>
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {analytics.healthImpact.methodologySources[0]?.metricFormula}
+                    Atendimento agendado dentro da janela protegida do 1º e 2º turno via S+ / Teams preserva horas produtivas por consulta em comparação à saída externa sem hora marcada.
                   </p>
                   <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#E5E0D5]">
                     <strong>Referência:</strong> {analytics.healthImpact.methodologySources[0]?.officialSource}
@@ -252,16 +255,13 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
 
                 <div className="p-4 rounded-xl bg-[#FAF9F6] border border-[#E5E0D5] space-y-1.5">
                   <div className="text-xs font-semibold text-[#5A6561]">
-                    Redução de Sinistralidade em Pronto-Socorro
+                    2. Resolutividade APS (94%) & Desfechos sem Deslocamento Externo
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(analytics.healthImpact.emergencySavingsBrl)}{' '}
-                    <span className="text-xs font-semibold text-[#1F564C]">
-                      ({analytics.healthImpact.emergencyVisitsAvoided} idas evitadas)
-                    </span>
+                    {analytics.healthImpact.emergencyVisitsAvoided} encaminhamentos externos evitados
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {analytics.healthImpact.methodologySources[1]?.metricFormula}
+                    A coordenação longitudinal por Médico de Família, Enfermagem, Nutrição e Psicologia resolve 94% das queixas na própria unidade APS sem necessidade de pronto-socorro.
                   </p>
                   <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#E5E0D5]">
                     <strong>Referência:</strong> {analytics.healthImpact.methodologySources[1]?.officialSource}
@@ -270,16 +270,16 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
 
                 <div className="p-4 rounded-xl bg-[#FAF9F6] border border-[#E5E0D5] space-y-1.5">
                   <div className="text-xs font-semibold text-[#5A6561]">
-                    Mitigação de Absenteísmo e Afastamentos Crônicos
+                    3. Redução de Dias de Absenteísmo por Manejo Ativo (PCI)
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(analytics.healthImpact.absenteeismSavingsBrl)}{' '}
+                    {analytics.healthImpact.absenteeismDaysAvoided} dias preservados/ano{' '}
                     <span className="text-xs font-semibold text-[#1F564C]">
-                      ({analytics.healthImpact.absenteeismDaysAvoided} dias evitados)
+                      ({formatBrl(analytics.healthImpact.absenteeismSavingsBrl)} em horas de planta)
                     </span>
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {analytics.healthImpact.methodologySources[2]?.metricFormula}
+                    O monitoramento programado (Risco 4 quinzenal/mensal, Risco 3 trimestral e Risco 2/1 semestral) reduz afastamentos agudos no chão de fábrica.
                   </p>
                   <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#E5E0D5]">
                     <strong>Referência:</strong> {analytics.healthImpact.methodologySources[2]?.officialSource}

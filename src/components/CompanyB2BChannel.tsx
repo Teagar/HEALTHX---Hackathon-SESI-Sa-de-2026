@@ -7,12 +7,13 @@ import {
   TrendingUp,
   CheckCircle2,
   Clock,
-  Activity,
-  FileSpreadsheet,
+  Briefcase,
+  CalendarCheck,
   HeartHandshake,
   Copy,
   Check,
   BookOpen,
+  Layers,
 } from 'lucide-react';
 import type { LgpdGlobalDashboard } from '../types';
 
@@ -35,16 +36,16 @@ export const CompanyB2BChannel: React.FC<CompanyB2BChannelProps> = ({ metrics })
 
   const ddsScripts = [
     {
-      title: 'Roteiro 1: Acolhimento em Saúde e Sigilo Médico (2 min)',
-      shift: '1º e 2º Turnos • Diálogo Diário de Segurança',
+      title: 'Roteiro 1: Liberação Planejada na Janela do Turno e Sigilo Total (2 min)',
+      shift: '1º e 2º Turnos • Diálogo Diário com Liderança e Operação',
       script:
-        'Pessoal, a equipe de Saúde do SESI reservou janelas rápidas de 15 minutos aqui no turno para o check-up preventivo. Quando você recebe o Passe de Cuidado no WhatsApp, o horário já está alinhado com a supervisão, sem perda de bônus ou fila. Tudo o que é conversado no consultório é 100% protegido por sigilo médico — a empresa não recebe nenhum diagnóstico individual.',
+        'Pessoal, a equipe do SESI Saúde Acolhe reservou janelas rápidas de 15 a 20 minutos dentro do turno para os acompanhamentos periódicos. Quando você recebe o Passe de Cuidado no WhatsApp ou Microsoft Teams, o horário já está alinhado com a supervisão, sem perda de prêmio de assiduidade e sem precisar ir no contraturno. Todo atendimento é 100% protegido por sigilo — a empresa recebe apenas indicadores operacionais de presença e cobertura, sem qualquer informação clínica.',
     },
     {
-      title: 'Roteiro 2: Prevenção de Dores Osteomusculares e Pausa Ativa (2 min)',
-      shift: 'Operação e Manutenção • Prevenção na Linha',
+      title: 'Roteiro 2: Confirmação em 1 Toque para Evitar Vagas Ociosas (2 min)',
+      shift: 'Operação e Manutenção • Organização de Escala',
       script:
-        'Não espere a dor nas costas ou no ombro travar o movimento para procurar orientação. O atendimento da equipe de Enfermagem, Nutrição e Medicina do SESI ajuda a ajustar postura, hidratação e qualidade do sono antes de virar afastamento. Confirme seu horário em um toque pelo WhatsApp.',
+        'Quando chegar a confirmação do horário da sua consulta do SESI no celular, confirme em um toque ou avise caso precise trocar de janela no turno. Assim a liderança organiza a cobertura rápida do posto por 15 minutos e garantimos que nenhum colega perca a vaga de atendimento.',
     },
   ];
 
@@ -61,33 +62,45 @@ export const CompanyB2BChannel: React.FC<CompanyB2BChannelProps> = ({ metrics })
       maximumFractionDigits: 0,
     });
 
+  const pe = currentCompany.productionEconomy;
+  const prod = {
+    attendanceRatePercent: Math.max(0, 100 - currentCompany.noShowRatePercent),
+    carePlanActiveAdhesionPercent: pe.carePlanActiveAdhesionPercent,
+    consultationsRealizedInProtectedShift: pe.totalConsultationsInShiftWindow,
+    equivalentFullShiftsPreserved: pe.equivalentWorkshiftsPreserved,
+    methodologyNote: pe.methodologyNote,
+    productiveHoursPreservedInShift: pe.productiveHoursPreservedTotal,
+    productiveValuePreservedBrl: pe.productionValuePreservedBrl,
+    hoursSavedPerConsultation: pe.hoursSavedPerConsultationInShift,
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-[#F5F3EE] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-6 pb-8">
-        {/* Cabeçalho do Portal Corporativo da Empresa */}
+        {/* Cabeçalho do Portal do Gestor / RH da Empresa Contratante */}
         <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#EEF6F3] border border-[#C6E4DA] text-[#1F564C] text-[11px] font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Portal Corporativo da Unidade • Dados Anonimizados (LGPD Art. 11 • Coorte Mínima N ≥ {metrics.minGroupSize})
+              Portal do Gestor / RH • Conformidade Estrita LGPD (Sem Classificação de Risco ou Dados Clínicos • N ≥ {metrics.minGroupSize})
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-[#1E2926] tracking-tight flex items-center gap-2.5">
               <Building2 className="w-5 h-5 text-[#1F564C] shrink-0" />
               <span>{currentCompany.companyName}</span>
             </h1>
             <p className="text-xs text-[#5A6561]">
-              {currentCompany.companyUnit} • {currentCompany.totalCatalogedRows} registros no censo ({currentCompany.totalLives} ativos e {currentCompany.inactiveLives} inativos) • Visão exclusiva desta unidade industrial
+              {currentCompany.companyUnit} • {currentCompany.totalCatalogedRows} vínculos no censo contratual ({currentCompany.totalLives} ativos e {currentCompany.inactiveLives} inativos) • Indicadores exclusivos de produção, cobertura e assiduidade
             </p>
           </div>
 
-          {/* Seletor discreto de Unidade Credenciada (escopo exclusivo por empresa) */}
+          {/* Seletor de Unidade Industrial Autenticada */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 bg-[#FAF9F6] p-3 rounded-xl border border-[#E5E0D5]">
             <div className="text-left sm:text-right">
               <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B]">
                 Unidade Industrial Autenticada
               </span>
               <span className="text-[11px] text-[#5A6561]">
-                Indicadores restritos à empresa selecionada
+                Escopo isolado por empresa contratante
               </span>
             </div>
             <select
@@ -113,30 +126,30 @@ export const CompanyB2BChannel: React.FC<CompanyB2BChannelProps> = ({ metrics })
               Coorte Populacional Inferior ao Mínimo de Anonimização (N &lt; {metrics.minGroupSize})
             </h2>
             <p className="text-xs text-[#5A6561] max-w-lg mx-auto leading-relaxed">
-              Para impedir a identificação indireta de colaboradores, os indicadores epidemiológicos e assistenciais só são exibidos quando a unidade possui ao menos {metrics.minGroupSize} trabalhadores ativos cadastrados.
+              Para impedir qualquer inferência individual, os indicadores operacionais só são exibidos quando a unidade possui ao menos {metrics.minGroupSize} trabalhadores ativos cadastrados.
             </p>
           </div>
         ) : (
           <>
-            {/* Linha 1: KPIs Operacionais da Empresa */}
+            {/* Linha 1: 4 KPIs Operacionais e de Economia de Produção */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs">
                 <div className="flex items-center justify-between text-[#5A6561] mb-2">
-                  <span className="text-xs font-medium">População Ativa Coberta</span>
+                  <span className="text-xs font-medium">Carteira Ativa Contratada</span>
                   <Users className="w-4 h-4 text-[#1F564C]" />
                 </div>
                 <div className="text-2xl font-bold text-[#1E2926] tabular-nums">
                   {currentCompany.totalLives}{' '}
-                  <span className="text-xs font-normal text-[#5A6561]">trabalhadores</span>
+                  <span className="text-xs font-normal text-[#5A6561]">trabalhadores ativos</span>
                 </div>
                 <p className="text-[11px] text-[#5A6561] mt-1.5">
-                  {currentCompany.activatedLives} já acolhidos • {currentCompany.pendingFirstVisitLives} aguardando 1ª consulta
+                  {currentCompany.activatedLives} já em acompanhamento • {currentCompany.pendingFirstVisitLives} aguardando 1ª consulta
                 </p>
               </div>
 
               <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs">
                 <div className="flex items-center justify-between text-[#5A6561] mb-2">
-                  <span className="text-xs font-medium">Taxa de Cobertura APS</span>
+                  <span className="text-xs font-medium">Utilização da Cobertura Contratada</span>
                   <CheckCircle2 className="w-4 h-4 text-[#1F564C]" />
                 </div>
                 <div className="text-2xl font-bold text-[#1F564C] tabular-nums">
@@ -148,250 +161,209 @@ export const CompanyB2BChannel: React.FC<CompanyB2BChannelProps> = ({ metrics })
                     style={{ width: `${Math.min(100, currentCompany.activationRatePercent || 0)}%` }}
                   />
                 </div>
+                <p className="text-[11px] text-[#5A6561] mt-1.5">
+                  Meta operacional de ativação da carteira industrial
+                </p>
               </div>
 
               <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs">
                 <div className="flex items-center justify-between text-[#5A6561] mb-2">
-                  <span className="text-xs font-medium">Taxa de Falta em Consulta</span>
+                  <span className="text-xs font-medium">Assiduidade nas Janelas de Turno</span>
                   <Clock className="w-4 h-4 text-[#1F564C]" />
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-[#1E2926] tabular-nums">
-                    {currentCompany.noShowRatePercent}%
+                    {prod.attendanceRatePercent}%
                   </span>
-                  <span className="text-[11px] text-[#5A6561] line-through">
-                    {metrics.historicalNoShowPercent}% antes
+                  <span className="text-[11px] text-[#5A6561]">
+                    ({currentCompany.noShowRatePercent}% faltas vs {metrics.historicalNoShowPercent}% histórico)
                   </span>
                 </div>
                 <p className="text-[11px] text-[#1F564C] font-medium mt-1.5">
-                  {currentCompany.carePassIssuedCount} Passes de Cuidado emitidos no turno
+                  {currentCompany.carePassIssuedCount} Passes de Cuidado emitidos na janela protegida
                 </p>
               </div>
 
               <div className="bg-[#1F564C] text-white rounded-2xl p-5 shadow-xs">
                 <div className="flex items-center justify-between text-[#C6E4DA] mb-2">
-                  <span className="text-xs font-medium">Economia Assistencial e Produtiva</span>
+                  <span className="text-xs font-medium">Economia de Produção no Turno</span>
                   <TrendingUp className="w-4 h-4 text-[#C6E4DA]" />
                 </div>
                 <div className="text-2xl font-bold tabular-nums">
-                  {formatBrl(currentCompany.healthImpact.totalEstimatedAnnualImpactBrl)}
+                  {formatBrl(prod.productiveValuePreservedBrl)}
                   <span className="text-xs font-normal text-[#C6E4DA]"> /ano</span>
                 </div>
                 <p className="text-[11px] text-[#E6F2EE] mt-1.5">
-                  Projeção proporcional aos {currentCompany.totalLives} vínculos ativos da unidade
+                  {prod.productiveHoursPreservedInShift}h produtivas preservadas ({prod.equivalentFullShiftsPreserved} turnos de 8h)
                 </p>
               </div>
             </div>
 
-            {/* Linha 2: Retorno Assistencial e Produtivo Baseado em Evidências Epidemiológicas */}
+            {/* Linha 2: Detalhamento da Economia de Produção e Indicadores Operacionais da Carteira */}
             <div className="bg-white rounded-2xl border border-[#E5E0D5] p-5 sm:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#EFECE6] pb-4">
                 <div>
                   <h2 className="text-sm font-bold text-[#1E2926] flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-[#1F564C]" />
-                    Impacto Produtivo e Economia em Saúde Ocupacional ({currentCompany.companyName})
+                    <Briefcase className="w-4 h-4 text-[#1F564C]" />
+                    Economia de Produção e Eficiência Operacional da Carteira ({currentCompany.companyName})
                   </h2>
                   <p className="text-xs text-[#5A6561] mt-0.5">
-                    Cálculo direto sobre as {currentCompany.totalLives} vidas ativas e {currentCompany.activatedLives} acompanhamentos clínicos desta unidade
+                    Métricas exclusivamente produtivas e logísticas calculadas a partir dos {currentCompany.totalLives} colaboradores ativos e {prod.consultationsRealizedInProtectedShift} atendimentos realizados em janela protegida.
                   </p>
                 </div>
                 <span className="text-[11px] font-medium text-[#1F564C] bg-[#EEF6F3] px-3 py-1 rounded-lg border border-[#C6E4DA] self-start sm:self-auto">
-                  Resolutividade APS: {metrics.apsResolvabilityPercent}% • NPS {metrics.npsScore}
+                  Zero exposição de dados clínicos ou de doenças (LGPD)
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Indicador 1: Horas Produtivas Preservadas */}
+                {/* Métrica Produtiva 1 */}
                 <div className="bg-[#FAF9F6] rounded-xl p-4 border border-[#E5E0D5] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#5A6561]">
-                      1. Horas Produtivas Preservadas
+                      1. Horas Produtivas Preservadas na Planta
                     </span>
                     <span className="text-xs font-bold text-[#1F564C] bg-[#EEF6F3] px-2 py-0.5 rounded">
-                      {currentCompany.healthImpact.productiveHoursPreserved}h / ano
+                      {prod.productiveHoursPreservedInShift}h / ano
                     </span>
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(currentCompany.healthImpact.productiveHoursValueBrl)}
+                    {formatBrl(prod.productiveValuePreservedBrl)}{' '}
+                    <span className="text-xs font-semibold text-[#1F564C]">
+                      ({prod.equivalentFullShiftsPreserved} turnos de 8h)
+                    </span>
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {currentCompany.healthImpact.methodologySources[0]?.metricFormula}
+                    Consultas realizadas na janela protegida de 15–20 min evitam o deslocamento externo sem hora marcada (~3,5h de ausência na linha por saída), preservando {prod.hoursSavedPerConsultation.toLocaleString('pt-BR')}h produtivas por atendimento.
                   </p>
                   <div className="pt-1 text-[10px] text-[#64748B] border-t border-[#E5E0D5]">
-                    <strong>Fonte:</strong> {currentCompany.healthImpact.methodologySources[0]?.officialSource}
+                    <strong>Base de cálculo:</strong> {prod.methodologyNote}
                   </div>
                 </div>
 
-                {/* Indicador 2: Pronto-Socorro Evitado */}
+                {/* Métrica Produtiva 2 */}
                 <div className="bg-[#FAF9F6] rounded-xl p-4 border border-[#E5E0D5] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#5A6561]">
-                      2. Pronto-Socorro Evitado (Sinistralidade)
+                      2. Cobertura Multiprofissional Integrada
                     </span>
                     <span className="text-xs font-bold text-[#1F564C] bg-[#EEF6F3] px-2 py-0.5 rounded">
-                      {currentCompany.healthImpact.emergencyVisitsAvoided} idas evitadas
+                      { currentCompany.multiTeamCoveragePercent }% da carteira
                     </span>
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(currentCompany.healthImpact.emergencySavingsBrl)}
+                    {prod.consultationsRealizedInProtectedShift} atendimentos no turno
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {currentCompany.healthImpact.methodologySources[1]?.metricFormula}
+                    Percentual dos trabalhadores ativos que utilizam o acompanhamento integrado do contrato SESI Saúde Acolhe dentro das janelas programadas sem atrito com a supervisão.
                   </p>
                   <div className="pt-1 text-[10px] text-[#64748B] border-t border-[#E5E0D5]">
-                    <strong>Fonte:</strong> {currentCompany.healthImpact.methodologySources[1]?.officialSource}
+                    <strong>Fonte:</strong> Registro de agendamentos e comparecimentos da unidade
                   </div>
                 </div>
 
-                {/* Indicador 3: Redução de Absenteísmo */}
+                {/* Métrica Produtiva 3 */}
                 <div className="bg-[#FAF9F6] rounded-xl p-4 border border-[#E5E0D5] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#5A6561]">
-                      3. Dias de Afastamento Evitados
+                      3. Engajamento e Continuidade Operacional
                     </span>
                     <span className="text-xs font-bold text-[#1F564C] bg-[#EEF6F3] px-2 py-0.5 rounded">
-                      {currentCompany.healthImpact.absenteeismDaysAvoided} dias / ano
+                      {prod.carePlanActiveAdhesionPercent}% de adesão
                     </span>
                   </div>
                   <div className="text-xl font-bold text-[#1E2926] tabular-nums">
-                    {formatBrl(currentCompany.healthImpact.absenteeismSavingsBrl)}
+                    {currentCompany.activatedLives} de {currentCompany.totalLives} vidas ativas
                   </div>
                   <p className="text-[11px] text-[#5A6561] leading-relaxed">
-                    {currentCompany.healthImpact.methodologySources[2]?.metricFormula}
+                    Índice de trabalhadores acolhidos que mantêm continuidade regular nos retornos programados e adesão às metas preventivas pactuadas, reduzindo paradas imprevistas na escala.
                   </p>
                   <div className="pt-1 text-[10px] text-[#64748B] border-t border-[#E5E0D5]">
-                    <strong>Fonte:</strong> {currentCompany.healthImpact.methodologySources[2]?.officialSource}
+                    <strong>Fonte:</strong> Indicador agregado de continuidade do programa APS
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Linha 3: Painel Analítico Anonimizado da Unidade (Estratificação + Linhas de Cuidado + Evolução) */}
+            {/* Linha 3: Evolução Mensal de Acompanhamentos (Jul–Dez/2026) & Cobertura por Turno Operacional */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Estratificação Populacional de Risco APS */}
-              <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs space-y-4">
+              {/* Evolução Mensal Jul–Dez/2026 */}
+              <div className="lg:col-span-6 bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs flex flex-col justify-between space-y-4">
                 <div>
-                  <h3 className="text-sm font-bold text-[#1E2926]">
-                    Estratificação de Risco Populacional (Anônima)
+                  <h3 className="text-sm font-bold text-[#1E2926] flex items-center gap-2">
+                    <CalendarCheck className="w-4 h-4 text-[#1F564C]" />
+                    Evolução Mensal de Acompanhamentos na Unidade (Jul–Dez/2026)
                   </h3>
                   <p className="text-xs text-[#5A6561] mt-0.5">
-                    Distribuição agregada dos {currentCompany.totalLives} colaboradores ativos da unidade
+                    Volume mensal de trabalhadores contatados e acompanhados nas janelas de turno (Colunas Jul–Dez/2026)
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  {currentCompany.riskBreakdown.map((item) => (
-                    <div key={item.riskLevel} className="space-y-1">
+                <div className="grid grid-cols-6 gap-2.5 items-end h-36 pt-4 px-2">
+                  {currentCompany.monthlyContactsTrend.map((m) => {
+                    const maxVal = Math.max(
+                      1,
+                      ...currentCompany.monthlyContactsTrend.map((x) => x.contactedCount)
+                    );
+                    const heightPct = Math.max(18, Math.round((m.contactedCount / maxVal) * 100));
+                    return (
+                      <div key={m.month} className="flex flex-col items-center gap-1.5 h-full justify-end">
+                        <span className="text-xs font-bold text-[#1F564C] tabular-nums">
+                          {m.contactedCount}
+                        </span>
+                        <div
+                          className="w-full bg-[#1F564C]/85 rounded-t-lg transition-all"
+                          style={{ height: `${heightPct}%` }}
+                        />
+                        <span className="text-[10.5px] font-semibold text-[#5A6561] truncate max-w-full">
+                          {m.month}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-xl bg-[#FAF9F6] border border-[#E5E0D5] px-3.5 py-2.5 text-[11px] text-[#5A6561]">
+                  A programação antecipada dos retornos permite que a supervisão de turno conheça com antecedência o volume semanal de liberações de 15 minutos, sem impacto na linha de produção.
+                </div>
+              </div>
+
+              {/* Cobertura e Assiduidade por Turno Operacional */}
+              <div className="lg:col-span-6 bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs flex flex-col justify-between space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[#1E2926] flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#1F564C]" />
+                    Cobertura e Engajamento por Turno Operacional
+                  </h3>
+                  <p className="text-xs text-[#5A6561] mt-0.5">
+                    Distribuição dos trabalhadores ativos e percentual de cobertura por janela de turno
+                  </p>
+                </div>
+
+                <div className="space-y-3.5">
+                  {currentCompany.shiftAdhesion.map((sh) => (
+                    <div
+                      key={sh.shiftLabel}
+                      className="rounded-xl border border-[#E5E0D5] bg-[#FAF9F6] p-3.5 space-y-2"
+                    >
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-[#1E2926]">{item.label}</span>
-                        <span
-                          className="px-2 py-0.5 rounded font-bold tabular-nums text-xs"
-                          style={{
-                            color: item.colorHex,
-                            backgroundColor: `${item.colorHex}14`,
-                          }}
-                        >
-                          {item.count} vidas ({item.percent}%)
+                        <span className="font-bold text-[#1E2926]">{sh.shiftLabel}</span>
+                        <span className="font-bold text-[#1F564C] bg-[#EEF6F3] px-2.5 py-0.5 rounded-md tabular-nums">
+                          {sh.totalGroup} vidas ativas • {sh.adhesionPercent}% cobertos
                         </span>
                       </div>
                       <div className="w-full h-2 bg-[#EFECE6] rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${item.percent}%`,
-                            backgroundColor: item.colorHex,
-                          }}
+                          className="h-full bg-[#1F564C] rounded-full"
+                          style={{ width: `${sh.adhesionPercent}%` }}
                         />
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* Linhas de Cuidado APS & Adesão por Turno */}
-              <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E5E0D5] p-5 shadow-xs flex flex-col justify-between space-y-5">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-[#1E2926] flex items-center gap-2">
-                        <FileSpreadsheet className="w-4 h-4 text-[#1F564C]" />
-                        Demandas Assistenciais e Linhas de Cuidado na Unidade
-                      </h3>
-                      <p className="text-xs text-[#5A6561]">
-                        Temas prioritários para direcionar campanhas internas e ergonomia sem exposição individual
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {currentCompany.careLinesDistribution.map((line) => (
-                      <div
-                        key={line.lineName}
-                        className="p-3 rounded-xl bg-[#FAF9F6] border border-[#E5E0D5] flex items-center justify-between gap-2"
-                      >
-                        <div className="text-xs font-semibold text-[#1E2926]">{line.lineName}</div>
-                        <span className="text-xs font-bold text-[#1F564C] bg-[#EEF6F3] px-2.5 py-1 rounded-lg shrink-0">
-                          {line.percent}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Evolução Mensal Jul–Dez/2026 e Adesão por Turno */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#EFECE6]">
-                  <div>
-                    <h4 className="text-xs font-bold text-[#1E2926] mb-2">
-                      Contatos de Coordenação do Cuidado (Jul–Dez/2026)
-                    </h4>
-                    <div className="grid grid-cols-6 gap-1.5 items-end h-20 pt-2">
-                      {currentCompany.monthlyContactsTrend.map((m) => {
-                        const maxVal = Math.max(
-                          1,
-                          ...currentCompany.monthlyContactsTrend.map((x) => x.contactedCount)
-                        );
-                        const heightPct = Math.max(18, Math.round((m.contactedCount / maxVal) * 100));
-                        return (
-                          <div key={m.month} className="flex flex-col items-center gap-1 h-full justify-end">
-                            <span className="text-[10px] font-bold text-[#1F564C] tabular-nums">
-                              {m.contactedCount}
-                            </span>
-                            <div
-                              className="w-full bg-[#1F564C]/85 rounded-t"
-                              style={{ height: `${heightPct}%` }}
-                            />
-                            <span className="text-[9px] text-[#5A6561] truncate max-w-full">
-                              {m.month.split('/')[0]}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-bold text-[#1E2926] mb-2">
-                      Cobertura por Turno Operacional
-                    </h4>
-                    <div className="space-y-2">
-                      {currentCompany.shiftAdhesion.map((sh) => (
-                        <div key={sh.shiftLabel} className="text-xs space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-[#5A6561] truncate pr-2">{sh.shiftLabel}</span>
-                            <span className="font-semibold text-[#1E2926] tabular-nums">
-                              {sh.totalGroup} vidas ({sh.adhesionPercent}%)
-                            </span>
-                          </div>
-                          <div className="w-full h-1.5 bg-[#EFECE6] rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-[#1F564C] rounded-full"
-                              style={{ width: `${sh.adhesionPercent}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="rounded-xl bg-[#EEF6F3] border border-[#C6E4DA] px-3.5 py-2.5 text-[11px] text-[#1F564C] font-medium">
+                  Proteção de Dados (LGPD Art. 11): Este painel apresenta exclusivamente métricas operacionais de utilização, cobertura de carteira e horas produtivas preservadas. Classificações de risco clínico e prevalência de patologias são de acesso exclusivo da Equipe de Saúde.
                 </div>
               </div>
             </div>
@@ -405,7 +377,7 @@ export const CompanyB2BChannel: React.FC<CompanyB2BChannelProps> = ({ metrics })
                     Comunicados Rápidos para Liderança de Turno (DDS de 2 Minutos)
                   </h3>
                   <p className="text-xs text-[#5A6561]">
-                    Roteiros curtos para alinhamento com supervisores de produção, facilitando a liberação planejada de 15 min no turno
+                    Roteiros curtos para alinhamento com supervisores de produção sobre a janela protegida de 15 minutos no turno
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#5A6561]">

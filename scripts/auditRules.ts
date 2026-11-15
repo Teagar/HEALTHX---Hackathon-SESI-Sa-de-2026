@@ -155,7 +155,7 @@ check('R5 Zero vazamento de nome/CPF/matrícula no agregado B2B', leaks.length =
 check(
   'R5 Todas as 6 empresas da planilha atendem à trava N>=5 e possuem métricas isoladas',
   m.companies.length === 6 &&
-    m.companies.every((c) => c.privacyLockApplied && c.totalLives >= 5 && c.healthImpact.totalEstimatedAnnualImpactBrl > 0),
+    m.companies.every((c) => c.privacyLockApplied && c.totalLives >= 5 && c.productionEconomy.productionValuePreservedBrl > 0),
   m.companies.map((c) => `${c.companyName}:${c.totalLives}`).join(', ')
 );
 const tiny = getLgpdAggregatedMetrics(activeEmps.slice(0, 3));
@@ -225,6 +225,100 @@ async function runAsyncChecks() {
       `${pdfFicha.matricula} / ${pdfFicha.name} (${pdfFicha.companyName}) -> Risco ${pdfFicha.riskLevel}`
     );
   }
+
+  // Regra 8: Trava LGPD estrita do /gestor (sem risco, sem doenças/linhas, apenas economia de produção)
+  const DISEASE_TERMS = [
+    'riskBreakdown',
+    'careLinesDistribution',
+    'Hipertens',
+    'Diabetes',
+    'Dislipidemia',
+    'Saúde Mental',
+    'Ansiedade',
+    'Depress',
+    'DCNT',
+    'Obesidade',
+    'Osteomuscular',
+  ];
+  const gestorJson = JSON.stringify(m.companies);
+  const diseaseHits = DISEASE_TERMS.filter((t) => gestorJson.includes(t));
+  check(
+    'R8 /gestor sem classificação de risco e sem doenças/linhas de cuidado no payload',
+    diseaseHits.length === 0,
+    diseaseHits.join(', ')
+  );
+  check(
+    'R8 /gestor expõe Economia de Produção válida por empresa',
+    m.companies.every(
+      (c) =>
+        c.productionEconomy &&
+        c.productionEconomy.productiveHoursPreservedTotal >= 0 &&
+        c.productionEconomy.productionValuePreservedBrl >= 0 &&
+        typeof c.multiTeamCoveragePercent === 'number'
+    ),
+    m.companies
+      .map((c) => `${c.companyName}: ${c.productionEconomy.productiveHoursPreservedTotal}h`)
+      .join(' | ')
+  );
+  const b2bSource = fs.readFileSync('src/components/CompanyB2BChannel.tsx', 'utf-8');
+  check(
+    'R8 CompanyB2BChannel.tsx não renderiza riskBreakdown/careLinesDistribution/Economia Assistencial',
+    !/riskBreakdown|careLinesDistribution|Economia Assistencial/.test(b2bSource)
+  );
+
+  // Regra 9: Motor de importação (14 anexos de teste) + SHA-256 + supply cadastral
+  const engine = await import('../src/secilitaEngine');
+  const docs: Awaited<ReturnType<typeof engine.readImportedFile>> = [];
+  const missing: string[] = [];
+  for (const fn of engine.SECILITA_DEMO_FILES) {
+    const p = `public/demo/${fn}`;
+    if (!fs.existsSync(p)) {
+      missing.push(fn);
+      continue;
+    }
+    const file = new File([fs.readFileSync(p)], fn);
+    try {
+      docs.push(...(await engine.readImportedFile(file)));
+    } catch (err) {
+      missing.push(`${fn} (erro: ${(err as Error).message})`);
+    }
+  }
+  check(
+    'R9 14 anexos de teste presentes e lidos pelo motor de importação',
+    missing.length === 0 && docs.length >= 14,
+    `docs=${docs.length}${missing.length ? ' faltando=' + missing.join(',') : ''}`
+  );
+  check(
+    'R9 Todo documento lido possui hash SHA-256 (64 hex)',
+    docs.every((d) => /^[0-9a-f]{64}$/.test(d.sha256Hash)),
+    docs.filter((d) => !/^[0-9a-f]{64}$/.test(d.sha256Hash)).map((d) => d.name).join(',')
+  );
+  const items = engine.sourceDocsToQueueItems(docs, emps);
+  const newItems = items.filter((i) => i.isNewEmployeeMode);
+  const regMissing = newItems.filter((i) =>
+    engine.REGISTRATION_COL_KEYS.some(
+      (k) => !(i.fields.find((f) => f.key === k)?.value ?? '').trim()
+    )
+  );
+  check(
+    'R9 Novos cadastros recebem todos os 11 campos cadastrais não-médicos',
+    newItems.length > 0 && regMissing.length === 0,
+    `itens=${items.length}, novos=${newItems.length}, incompletos=${regMissing.length}`
+  );
+  const applied = newItems.map((i) => engine.applyImportItemToEmployee(i));
+  check(
+    'R9 applyImportItemToEmployee gera Employee com storedDocuments (custódia SHA-256)',
+    applied.length > 0 &&
+      applied.every(
+        (e) =>
+          e.matricula &&
+          e.name &&
+          e.companyName &&
+          (e.storedDocuments?.length ?? 0) >= 1 &&
+          /^[0-9a-f]{64}$/.test(e.storedDocuments![0].sha256IntegrityHash)
+      ),
+    applied.map((e) => `${e.matricula}/${e.name}`).slice(0, 5).join(', ')
+  );
 
   console.log(fails === 0 ? '\n✅ ALL RULE CHECKS PASSED!' : `\n❌ ${fails} FAILURE(S)`);
   process.exit(fails ? 1 : 0);

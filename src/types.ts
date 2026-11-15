@@ -9,6 +9,8 @@ export type ReturnRule =
 
 export type ChannelTab = 'medical' | 'admin' | 'company_b2b';
 
+export type AppRoute = '/' | '/home' | '/admin' | '/gestor';
+
 export type EmployeeStatus = 'ATIVO' | 'INATIVO';
 
 export interface CheckIn60s {
@@ -33,10 +35,35 @@ export interface MonthlyContacts2026 {
 export interface ExamPrescriptionEntry {
   id: string;
   date: string;
-  category: 'Resultado de Exame' | 'Prescrição Médica' | 'Encaminhamento Multiprofissional';
+  category: 'Resultado de Exame' | 'Prescrição Médica' | 'Encaminhamento Multiprofissional' | 'Prontuário / Evolução';
   title: string;
   details: string;
   sourceMethod: 'OCR' | 'Manual';
+  validatedBy: string;
+  fileName?: string;
+  mimeType?: string;
+  fileSizeBytes?: number;
+  sha256Hash?: string;
+  evidenceSnippet?: string;
+  rawExtractedText?: string;
+  previewDataUrl?: string;
+}
+
+/**
+ * Arquivo lido e armazenado no prontuário para controle de segurança e integridade da informação.
+ */
+export interface StoredProntuarioDocument {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256IntegrityHash: string;
+  importedAt: string;
+  docKind: 'Gestão de Retorno' | 'Plano de Cuidados' | 'Gestão do Cuidado' | 'Resultado de Exame / Laudo' | 'Prescrição Médica' | 'Mensagem / Declaração';
+  extractionMethod: string;
+  extractedText: string;
+  previewDataUrl?: string;
+  fieldsUpdated: { label: string; before: string; after: string; evidence: string }[];
   validatedBy: string;
 }
 
@@ -103,6 +130,7 @@ export interface Employee {
   pciRecommendations: string[];
   pciExams: string[];
   examResultsAndPrescriptions: ExamPrescriptionEntry[];
+  storedDocuments?: StoredProntuarioDocument[];
   whatsappStatus: string;
   returnNotes: string;
   checkIn60s?: CheckIn60s;
@@ -121,9 +149,8 @@ export interface ShiftWindowConfig {
 }
 
 /**
- * Métricas de Retorno Operacional e Economia em Saúde Corporativa
- * Baseadas estritamente nos trabalhadores inseridos e em fontes epidemiológicas oficiais.
- * (Sem custos internos de projeto/CAPEX/folha, que são exclusivos do pitch).
+ * Métricas de Retorno Operacional e Economia Produtiva/Assistencial
+ * Baseadas estritamente nos trabalhadores inseridos e em fontes oficiais.
  */
 export interface CorporateHealthImpactMetrics {
   activeLivesScope: number;
@@ -149,8 +176,28 @@ export interface CorporateHealthImpactMetrics {
 }
 
 /**
- * Métricas exclusivas de UMA empresa contratante para o Portal do Gestor B2B (LGPD).
- * NUNCA contém nome, CPF, matrícula, cargo individual ou diagnóstico, e NUNCA expõe outras empresas.
+ * Métricas exclusivas de Economia de Produção e Operação Industrial para o Portal do Gestor (/gestor).
+ * Estritamente calculadas sobre os dados operacionais da planilha (vidas ativas, consultas realizadas no turno,
+ * contatos mensais e adesão ao plano), SEM expor dados clínicos, riscos ou doenças.
+ */
+export interface ProductionEconomyMetrics {
+  activeWorkersCount: number;
+  accompaniedWorkersCount: number;
+  totalConsultationsInShiftWindow: number;
+  hoursSavedPerConsultationInShift: number; // 3.7h poupadas por consulta na janela protegida vs saída externa
+  productiveHoursPreservedTotal: number;
+  industrialHourCostBrl: number; // R$ 42,80/h custo médio hora industrial CNI/FIon
+  productionValuePreservedBrl: number;
+  equivalentWorkshiftsPreserved: number; // Turnos de 8h preservados na linha
+  recoveredAppointmentsFromNoShow: number;
+  carePlanActiveAdhesionCount: number;
+  carePlanActiveAdhesionPercent: number;
+  methodologyNote: string;
+}
+
+/**
+ * Métricas exclusivas de UMA empresa contratante para o Portal do Gestor B2B (LGPD - Rota /gestor).
+ * NUNCA contém nome, CPF, matrícula, cargo individual, diagnóstico, classificação de risco ou linhas de doenças.
  */
 export interface LgpdCompanyMetric {
   companyId: string;
@@ -158,26 +205,16 @@ export interface LgpdCompanyMetric {
   companyUnit: string;
   totalCatalogedRows: number;
   totalLives: number; // Vidas ativas da empresa
-  inactiveLives: number; // Vidas inativas da empresa na planilha
-  activatedLives: number; // Já acompanhadas na APS
-  pendingFirstVisitLives: number; // Nunca agendaram 1ª consulta
+  inactiveLives: number; // Vidas inativas da empresa
+  activatedLives: number; // Já acompanhadas no programa
+  pendingFirstVisitLives: number; // Pendentes de 1º agendamento
   multiTeamLivesCount: number;
+  multiTeamCoveragePercent: number;
   activationRatePercent: number;
   attendanceRatePercent: number;
   noShowRatePercent: number;
   carePassIssuedCount: number;
   privacyLockApplied: boolean; // Trava mínima de grupo N >= 5
-  riskBreakdown: {
-    riskLevel: RiskLevel;
-    label: string;
-    count: number;
-    percent: number;
-    colorHex: string;
-  }[];
-  careLinesDistribution: {
-    lineName: string;
-    percent: number;
-  }[];
   monthlyContactsTrend: {
     month: string;
     contactedCount: number;
@@ -189,7 +226,7 @@ export interface LgpdCompanyMetric {
     adhesionPercent: number;
     suppressed?: boolean;
   }[];
-  healthImpact: CorporateHealthImpactMetrics;
+  productionEconomy: ProductionEconomyMetrics;
 }
 
 export interface LgpdGlobalDashboard {

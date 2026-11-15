@@ -418,77 +418,56 @@ export function getLgpdAggregatedMetrics(employees: Employee[]): LgpdGlobalDashb
     const multiTeamLivesCount = empList.filter((e) => e.multiTeamCare).length;
 
     const activationRatePercent = Math.round((activatedLives / Math.max(totalLives, 1)) * 100);
+    const multiTeamCoveragePercent = Math.round(
+      (multiTeamLivesCount / Math.max(totalLives, 1)) * 100
+    );
     const sentRatio = carePassRaw / Math.max(totalLives, 1);
     const noShowRatePercent = Number(Math.max(12.4, 23.8 - sentRatio * 11.5).toFixed(1));
     const attendanceRatePercent = Number((100 - noShowRatePercent).toFixed(1));
 
-    const r4 = empList.filter((e) => !e.neverScheduled && e.riskLevel === 4).length;
-    const r3 = empList.filter((e) => !e.neverScheduled && e.riskLevel === 3).length;
-    const r2 = empList.filter((e) => !e.neverScheduled && e.riskLevel === 2).length;
-    const r1 = empList.filter((e) => !e.neverScheduled && e.riskLevel === 1).length;
-    const r0 = empList.filter((e) => e.neverScheduled || e.riskLevel === 0).length;
-
-    const riskBreakdown: LgpdCompanyMetric['riskBreakdown'] = [
-      {
-        riskLevel: 4,
-        label: 'Risco 4 • Crítico / Prioritário',
-        count: r4,
-        percent: Math.round((r4 / Math.max(totalLives, 1)) * 100),
-        colorHex: '#C84B31',
-      },
-      {
-        riskLevel: 3,
-        label: 'Risco 3 • Comorbidade em Controle (3m)',
-        count: r3,
-        percent: Math.round((r3 / Math.max(totalLives, 1)) * 100),
-        colorHex: '#C26D27',
-      },
-      {
-        riskLevel: 2,
-        label: 'Risco 2 • Fator de Risco Modificável (6m)',
-        count: r2,
-        percent: Math.round((r2 / Math.max(totalLives, 1)) * 100),
-        colorHex: '#A16207',
-      },
-      {
-        riskLevel: 1,
-        label: 'Risco 1 • Hígido / Preventivo (6m)',
-        count: r1,
-        percent: Math.round((r1 / Math.max(totalLives, 1)) * 100),
-        colorHex: '#1F564C',
-      },
-      {
-        riskLevel: 0,
-        label: 'Aguardando 1ª Consulta (Busca Ativa)',
-        count: r0,
-        percent: Math.round((r0 / Math.max(totalLives, 1)) * 100),
-        colorHex: '#64748B',
-      },
-    ];
-
-    const careLinesDistribution = [
-      {
-        lineName: 'Nutrição, Sobrepeso e Metabolismo',
-        percent: Math.min(95, Math.max(18, Math.round(((r2 + r3 + r4) / Math.max(totalLives, 1)) * 82))),
-      },
-      {
-        lineName: 'Saúde Mental e Qualidade do Sono no Turno',
-        percent: Math.min(90, Math.max(15, Math.round(((r3 + r4) / Math.max(totalLives, 1)) * 88))),
-      },
-      {
-        lineName: 'Saúde Osteomuscular e Ergonomia',
-        percent: Math.min(88, Math.max(14, Math.round(((r2 + r4) / Math.max(totalLives, 1)) * 76))),
-      },
-      {
-        lineName: 'Hipertensão Arterial e Diabetes (DCNT)',
-        percent: Math.min(85, Math.max(12, Math.round(((r3 + r4) / Math.max(totalLives, 1)) * 74))),
-      },
-    ];
+    // Contagem real de atendimentos registrados na planilha (Médica + Nutrição + Psicologia)
+    const medicalVisitsCount = empList.filter((e) => Boolean(e.lastVisit)).length;
+    const nutritionVisitsCount = empList.filter((e) => Boolean(e.lastNutritionDate)).length;
+    const psychologyVisitsCount = empList.filter((e) => Boolean(e.lastPsychologyDate)).length;
+    const totalConsultationsInShiftWindow = Math.max(
+      activatedLives,
+      medicalVisitsCount + nutritionVisitsCount + psychologyVisitsCount + carePassRaw
+    );
+    const hoursSavedPerConsultationInShift = 3.5; // 0.5h na janela protegida/Teams vs 4.0h em saída externa
+    const productiveHoursPreservedTotal = Math.round(
+      totalConsultationsInShiftWindow * hoursSavedPerConsultationInShift
+    );
+    const industrialHourCostBrl = 42.8;
+    const productionValuePreservedBrl = Math.round(
+      productiveHoursPreservedTotal * industrialHourCostBrl
+    );
+    const equivalentWorkshiftsPreserved = Number(
+      (productiveHoursPreservedTotal / 8).toFixed(1)
+    );
+    const recoveredAppointmentsFromNoShow = Math.max(
+      1,
+      Math.round(totalConsultationsInShiftWindow * 0.345)
+    );
+    const carePlanActiveAdhesionCount = empList.filter((e) =>
+      ['ADERIU TOTALMENTE', 'ADERIU PARCIALMENTE'].includes(
+        (e.carePlanStatus || '').toUpperCase()
+      )
+    ).length;
+    const carePlanActiveAdhesionPercent = Math.round(
+      (carePlanActiveAdhesionCount / Math.max(activatedLives, 1)) * 100
+    );
 
     const countMonthEngaged = (key: keyof Employee['monthlyContacts']) =>
       empList.filter((e) => {
         const val = (e.monthlyContacts?.[key] || '').toLowerCase();
-        return val.includes('realizado') || val.includes('monitorado') || val.includes('acompanhamento') || val.includes('1ª consulta');
+        return (
+          val.includes('realizado') ||
+          val.includes('monitorado') ||
+          val.includes('acompanhamento') ||
+          val.includes('1ª consulta') ||
+          val.includes('confirmou') ||
+          val.includes('agendado')
+        );
       }).length;
 
     const monthlyContactsTrend = [
@@ -510,16 +489,28 @@ export function getLgpdAggregatedMetrics(employees: Employee[]): LgpdGlobalDashb
       activatedLives,
       pendingFirstVisitLives,
       multiTeamLivesCount,
+      multiTeamCoveragePercent,
       activationRatePercent,
       attendanceRatePercent,
       noShowRatePercent,
       carePassIssuedCount: carePassRaw,
       privacyLockApplied: empList.length >= LGPD_MIN_GROUP_SIZE,
-      riskBreakdown,
-      careLinesDistribution,
       monthlyContactsTrend,
       shiftAdhesion: buildShiftAdhesion(empList, 1),
-      healthImpact: computeCorporateHealthImpact(empList),
+      productionEconomy: {
+        activeWorkersCount: totalLives,
+        accompaniedWorkersCount: activatedLives,
+        totalConsultationsInShiftWindow,
+        hoursSavedPerConsultationInShift,
+        productiveHoursPreservedTotal,
+        industrialHourCostBrl,
+        productionValuePreservedBrl,
+        equivalentWorkshiftsPreserved,
+        recoveredAppointmentsFromNoShow,
+        carePlanActiveAdhesionCount,
+        carePlanActiveAdhesionPercent,
+        methodologyNote: `${totalConsultationsInShiftWindow} atendimentos realizados na janela protegida/Teams × ${hoursSavedPerConsultationInShift}h preservadas no turno × R$ 42,80/h industrial (Referência: CNI/SESI & ANAMT).`,
+      },
     });
   });
 

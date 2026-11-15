@@ -3,19 +3,25 @@ import type { ChangeEvent, ReactNode } from 'react';
 import {
   Activity,
   AlertTriangle,
+  Archive,
   CalendarCheck,
   CalendarClock,
   Check,
   CheckCircle2,
   ClipboardList,
   ExternalLink,
+  Eye,
+  FileCheck2,
   FileScan,
   FileText,
+  FolderOpen,
   HeartPulse,
   ListChecks,
+  Lock,
   Plus,
   Save,
   Send,
+  ShieldCheck,
   Smartphone,
   Sparkles,
   Stethoscope,
@@ -31,20 +37,30 @@ import type {
   MonthlyContacts2026,
   ReturnRule,
   RiskLevel,
+  StoredProntuarioDocument,
 } from '../types';
 import {
   calculateNextVisitDate,
-  extractExamPrescriptionFromOcrText,
   getAllowedReturnRulesForRisk,
   getDefaultReturnRuleForRisk,
   normalizeEmployeeAfterSave,
   REFERENCE_DOCTORS,
   registerFirstConsultation,
 } from '../queueService';
+import { CARE_PLAN_VALID_OPTIONS } from '../xlsxWorkbookService';
 import {
-  CARE_PLAN_VALID_OPTIONS,
-  extractTextFromPdfBytes,
-} from '../xlsxWorkbookService';
+  ALLOWED,
+  applyImportItemToEmployee,
+  ColKey,
+  createPastedTextSourceDoc,
+  FieldDiffRow,
+  highlightEvidenceParts,
+  ImportQueueItem,
+  KIND_LABEL,
+  LABEL,
+  readImportedFile,
+  sourceDocsToQueueItems,
+} from '../secilitaEngine';
 
 export interface EmployeeCockpitProps {
   employee: Employee;
@@ -74,18 +90,52 @@ const FIELD_CLASS =
 const LABEL_CLASS =
   'mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#5A6561]';
 
-const SAMPLE_RETURN_OCR_SNIPPETS = [
+const PRONTUARIO_SAMPLE_DOCUMENTS = [
   {
+    fileName: 'laudo_laboratorial_hba1c_lipidograma.pdf',
     label: 'Laudo Laboratorial (HbA1c + Lipidograma)',
-    text: 'Resultado de Exame Laboratorial: Glicemia jejum 104 mg/dL • HbA1c 6,0% • Colesterol Total 182 mg/dL • PA 126/80 mmHg em controle adequado.',
+    text: [
+      'LAUDO LABORATORIAL E EVOLUÇÃO DE PRONTUÁRIO S+',
+      'Data Ficha: 15/11/2026',
+      'Resultado de Exame Laboratorial: Hemograma completo dentro dos parâmetros de normalidade.',
+      'Glicemia de jejum: 104 mg/dL • Hemoglobina Glicada (HbA1c): 6,0%',
+      'Lipidograma: Colesterol Total 182 mg/dL • HDL 52 mg/dL • Triglicerídeos 138 mg/dL.',
+      'Pressão Arterial aferida em consultório: PA 126/80 mmHg em controle adequado.',
+      'Classificação de risco de saúde: 2 - Saudável com risco',
+      'Status plano de cuidado: Aderiu totalmente',
+      'Retorno da consulta médica - data prevista: 15/05/2027',
+    ].join('\n'),
   },
   {
-    label: 'Prescrição Médica de Retorno (HAS)',
-    text: 'Prescrição Médica: Manter Losartana Potássica 50mg 1 cp pela manhã + Hidroclorotiazida 12,5mg 1x/dia. Controle pressórico estabilizado.',
+    fileName: 'prescricao_medica_retorno_has.pdf',
+    label: 'Prescrição Médica de Retorno (Hipertensão / DCNT)',
+    text: [
+      'PRESCRIÇÃO MÉDICA E GESTÃO DE RETORNO APS SESI',
+      'Data do monitoramento: 15/11/2026',
+      'Data da última consulta médica: 15/11/2026',
+      'Prescrição Médica: Manter Losartana Potássica 50mg 1 cp pela manhã + Hidroclorotiazida 12,5mg 1x/dia.',
+      'Classificação de risco de saúde: 3 - Compensado',
+      'Verificação de adesão ao plano de cuidado: A cada 3 meses',
+      'Atendimento com equipe multiprofissional: Sim',
+      'Retorno da consulta médica - data prevista: 13/02/2027',
+      'Status plano de cuidado: Aderiu parcialmente',
+      'Feito contato: Sim',
+      'Agendamento realizado: Sim',
+      'Observações do contato realizado: Receituário renovado e exames de controle solicitados.',
+    ].join('\n'),
   },
   {
-    label: 'Encaminhamento Multiprofissional (Nutrição/Psicologia)',
-    text: 'Encaminhamento Multiprofissional: Seguimento conjunto com Nutrição Clínica e Psicologia APS para manejo de estresse ocupacional e reeducação alimentar.',
+    fileName: 'evolucao_multiprofissional_nutri_psico.pdf',
+    label: 'Evolução Multiprofissional (Nutrição + Psicologia)',
+    text: [
+      'PLANO DE CUIDADOS E EVOLUÇÃO MULTIPROFISSIONAL APS',
+      'Data Ficha: 15/11/2026',
+      'Encaminhamento Multiprofissional: Acompanhamento com nutricionista Sim; Acompanhamento com psicólogo Sim.',
+      'Realizar exames laboratoriais de controle trimestral.',
+      'Classificação de risco de saúde: 3 - Compensado',
+      'Próximo contato: 15/02/2027',
+      'Observações: Colaborador em seguimento conjunto com Nutrição Clínica e Psicologia APS para manejo de estresse ocupacional e reeducação alimentar.',
+    ].join('\n'),
   },
 ];
 
@@ -106,6 +156,37 @@ function formatDateBr(value: string): string {
   return `${day}/${month}/${year}`;
 }
 
+function escapeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function highlightProntuarioHtml(rawText: string, activeEvidence: string): string {
+  let html = escapeHtml(rawText);
+  if (!activeEvidence) return html;
+  const parts = highlightEvidenceParts(activeEvidence);
+  for (const part of parts) {
+    const escapedPart = escapeHtml(part).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (escapedPart.length < 3) continue;
+    try {
+      const re = new RegExp(escapedPart, 'i');
+      if (re.test(html)) {
+        html = html.replace(
+          re,
+          (m) =>
+            `<mark class="rounded bg-[#FDE68A] px-1 py-0.5 font-semibold text-[#1E2926] ring-2 ring-[#F59E0B]/40">${m}</mark>`
+        );
+        break;
+      }
+    } catch {
+      // Ignora regex inválida
+    }
+  }
+  return html;
+}
+
 export function EmployeeCockpit({
   employee,
   onSave,
@@ -123,20 +204,21 @@ export function EmployeeCockpit({
   const [teamsCalendarSynced, setTeamsCalendarSynced] = useState<boolean>(employee.sentStatus);
   const [showWorkerAccessPreview, setShowWorkerAccessPreview] = useState<boolean>(false);
 
-  // Estado do Leitor OCR de Retorno (Exames / Prescrições)
+  // Estado do Leitor Interativo de Prontuário / Exames em 3 Colunas + Arquivo de Integridade
   const examFileInputRef = useRef<HTMLInputElement>(null);
-  const [ocrExamRaw, setOcrExamRaw] = useState('');
-  const [pendingOcrEntry, setPendingOcrEntry] = useState<ExamPrescriptionEntry | null>(null);
-  const [pendingSuggestedRisk, setPendingSuggestedRisk] = useState<RiskLevel | undefined>(
-    undefined
-  );
+  const [isProntuarioReaderOpen, setIsProntuarioReaderOpen] = useState<boolean>(false);
+  const [prontuarioQueue, setProntuarioQueue] = useState<ImportQueueItem[]>([]);
+  const [prontuarioIdx, setProntuarioIdx] = useState<number>(0);
+  const [prontuarioTab, setProntuarioTab] = useState<'rendered' | 'raw'>('rendered');
+  const [activeProntuarioField, setActiveProntuarioField] = useState<ColKey | null>(null);
+  const [inspectedStoredDoc, setInspectedStoredDoc] =
+    useState<StoredProntuarioDocument | null>(null);
 
   useEffect(() => {
     setDraft(employee);
     setDirty(false);
-    setPendingOcrEntry(null);
-    setOcrExamRaw('');
     setTeamsCalendarSynced(employee.sentStatus);
+    setInspectedStoredDoc(null);
   }, [employee.id]);
 
   useEffect(() => {
@@ -255,7 +337,6 @@ export function EmployeeCockpit({
     onSave(updated);
   };
 
-  // Sincronização em 1 clique com o Sistema de Agendamento (S+) e Agenda Microsoft Teams
   const handleSyncScheduleAndTeams = () => {
     const passCode = draft.carePassCode || `PASSE-${draft.matricula.slice(-4)}`;
     const slot =
@@ -295,83 +376,85 @@ export function EmployeeCockpit({
     }
   };
 
-  // Leitura OCR para Prescrições / Resultados de Exames na Consulta de Retorno
-  function parseOcrForReturnExam(text: string) {
-    if (!text.trim()) return;
-    const parsed = extractExamPrescriptionFromOcrText(text);
-    setPendingOcrEntry(parsed.entry);
-    setPendingSuggestedRisk(parsed.suggestedRisk);
-  }
+  // Abre o Leitor Interativo de Prontuário / Exames em 3 Colunas
+  const openProntuarioReaderWithSample = async (sampleIdx = 0) => {
+    const sample = PRONTUARIO_SAMPLE_DOCUMENTS[sampleIdx] ?? PRONTUARIO_SAMPLE_DOCUMENTS[0];
+    const headerInjected = [
+      `Funcionário (Código / Nome): ${draft.matricula} - ${draft.name}`,
+      `Empresa: ${draft.companyName}`,
+      sample.text,
+    ].join('\n');
+    const doc = await createPastedTextSourceDoc(headerInjected, sample.fileName);
+    doc.channel = 'pdf';
+    doc.method = 'Leitura OCR de Prontuário / Exame';
+    const items = sourceDocsToQueueItems([doc], [draft]).map((it) => ({
+      ...it,
+      matchedEmployeeId: draft.id,
+      isNewEmployeeMode: false,
+      matchHow: 'matrícula' as const,
+    }));
+    setProntuarioQueue((prev) => [...items, ...prev]);
+    setProntuarioIdx(0);
+    setIsProntuarioReaderOpen(true);
+  };
 
-  async function handleExamFileUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith('.pdf') || file.type === 'application/pdf') {
-        const buffer = await file.arrayBuffer();
-        const pdfText = await extractTextFromPdfBytes(buffer);
-        if (pdfText && pdfText.trim().length > 10) {
-          setOcrExamRaw(pdfText);
-          parseOcrForReturnExam(pdfText);
-          return;
-        }
-      }
-      if (file.type.startsWith('text/') || lowerName.endsWith('.txt')) {
-        const text = await file.text();
-        setOcrExamRaw(text);
-        parseOcrForReturnExam(text);
-      } else {
-        const extracted = `Laudo / Receituário Digitalizado (${file.name}): Exames laboratoriais e parâmetros vitais revisados na consulta de retorno; conduta terapêutica registrada.`;
-        setOcrExamRaw(extracted);
-        parseOcrForReturnExam(extracted);
-      }
-    } finally {
-      event.target.value = '';
+  const handleProntuarioFilesUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList || !fileList.length) return;
+    const files = Array.from(fileList);
+    event.target.value = '';
+    const docs = [];
+    for (const f of files) {
+      docs.push(...(await readImportedFile(f)));
     }
-  }
+    const items = sourceDocsToQueueItems(docs, [draft]).map((it) => ({
+      ...it,
+      matchedEmployeeId: draft.id,
+      isNewEmployeeMode: false,
+      matchHow: 'matrícula' as const,
+    }));
+    setProntuarioQueue((prev) => [...items, ...prev]);
+    setProntuarioIdx(0);
+    setIsProntuarioReaderOpen(true);
+  };
 
-  function handleValidateAndAddExamEntry() {
-    if (!pendingOcrEntry) return;
-    const currentList = draft.examResultsAndPrescriptions || [];
-    const updatedList = [pendingOcrEntry, ...currentList];
-    const visitDate = todayIso();
-    const targetRisk =
-      draft.riskLevel === 0 ? (pendingSuggestedRisk ?? 2) : draft.riskLevel;
-    const rule =
-      draft.riskLevel === 0 ? getDefaultReturnRuleForRisk(targetRisk) : draft.returnRule;
-    const nextVisit = calculateNextVisitDate(visitDate, rule, targetRisk);
+  const currentProntuarioItem = prontuarioQueue[prontuarioIdx] ?? null;
 
-    const updatedEmployee = normalizeEmployeeAfterSave({
-      ...draft,
-      riskLevel: targetRisk,
-      neverScheduled: false,
-      lastVisit: visitDate,
-      returnRule: rule,
-      nextVisit,
-      riskVerificationReturnDate: nextVisit,
-      careCoordinationDate: visitDate,
-      nextCareCoordinationDate: nextVisit,
-      lastMedicalDemands: `${pendingOcrEntry.title}: ${pendingOcrEntry.details}`,
-      examResultsAndPrescriptions: updatedList,
-      monthlyContacts: {
-        ...(draft.monthlyContacts || {
-          jul: '—',
-          ago: '—',
-          set: '—',
-          out: '—',
-          nov: 'Realizado',
-          dez: 'Programado',
-        }),
-        nov: 'Retorno Realizado',
-      },
-    });
+  const handleProntuarioFieldChange = (key: ColKey, newValue: string) => {
+    setProntuarioQueue((prev) =>
+      prev.map((it, idx) => {
+        if (idx !== prontuarioIdx) return it;
+        const nextFields: FieldDiffRow[] = it.fields.map((f) =>
+          f.key === key
+            ? {
+                ...f,
+                value: newValue,
+                state:
+                  newValue.trim().toUpperCase() === f.current.trim().toUpperCase()
+                    ? 'same'
+                    : !f.current
+                    ? 'new'
+                    : 'changed',
+              }
+            : f
+        );
+        return { ...it, fields: nextFields };
+      })
+    );
+  };
 
-    setDraft(updatedEmployee);
-    setPendingOcrEntry(null);
-    setOcrExamRaw('');
-    setDirty(true);
-  }
+  const handleApplyProntuarioItem = () => {
+    if (!currentProntuarioItem) return;
+    const updatedEmp = applyImportItemToEmployee(currentProntuarioItem, draft);
+    setDraft(updatedEmp);
+    setDirty(false);
+    onSave(updatedEmp);
+    setProntuarioQueue((prev) =>
+      prev.map((it, idx) =>
+        idx === prontuarioIdx ? { ...it, status: 'ok' as const } : it
+      )
+    );
+  };
 
   function handleRemoveExamEntry(entryId: string) {
     const currentList = draft.examResultsAndPrescriptions || [];
@@ -400,6 +483,7 @@ export function EmployeeCockpit({
   const isPendingFirstVisit = draft.neverScheduled || draft.riskLevel === 0;
   const sent = draft.sentStatus;
   const allowedRules = getAllowedReturnRulesForRisk(draft.riskLevel);
+  const storedDocs = draft.storedDocuments || [];
   const mc = draft.monthlyContacts || {
     jul: '',
     ago: '',
@@ -408,6 +492,9 @@ export function EmployeeCockpit({
     nov: '',
     dez: '',
   };
+
+  const activeProntuarioDiff =
+    currentProntuarioItem?.fields.find((f) => f.key === activeProntuarioField) ?? null;
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#DED9CE] bg-white shadow-sm">
@@ -810,7 +897,7 @@ export function EmployeeCockpit({
             </article>
           </div>
 
-          {/* COLUNA DIREITA (5/12): Gestão de Retorno + Agendamento Integrado (S+ & Microsoft Teams) + OCR de Exames + Contatos */}
+          {/* COLUNA DIREITA (5/12): Gestão de Retorno + Agendamento Integrado + Leitor de Prontuário/Exames + Custódia de Arquivos */}
           <div className="min-w-0 space-y-4 lg:col-span-5">
             {isPendingFirstVisit && draft.status !== 'INATIVO' && (
               <article className="rounded-xl border border-[#F5C6BC] bg-[#FDF2F0] p-4">
@@ -930,7 +1017,7 @@ export function EmployeeCockpit({
               </div>
 
               {/* Card de Conexão com Sistema de Agendamento e Agenda do Microsoft Teams */}
-              <div className="mt-3.5 rounded-xl border border-[#C6E4DA] bg-[#F4F9F7] p-3.5 space-y-3">
+              <div className="mt-3.5 space-y-3 rounded-xl border border-[#C6E4DA] bg-[#F4F9F7] p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1F564C] text-white">
@@ -1011,9 +1098,8 @@ export function EmployeeCockpit({
                   </button>
                 </div>
 
-                {/* Portal Simplificado do Trabalhador (Acesso sem senha via Teams / WhatsApp) */}
                 {showWorkerAccessPreview && (
-                  <div className="rounded-xl border border-[#DCD7CC] bg-white p-3 shadow-xs space-y-2">
+                  <div className="space-y-2 rounded-xl border border-[#DCD7CC] bg-white p-3 shadow-xs">
                     <div className="flex items-center justify-between border-b border-[#EFECE6] pb-2">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
                         Visão do Trabalhador • Acesso Direto sem Senha (Teams & WhatsApp)
@@ -1022,7 +1108,7 @@ export function EmployeeCockpit({
                         {draft.carePassCode || `PASSE-${draft.matricula.slice(-4)}`}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#1E2926] leading-relaxed">
+                    <p className="text-[11px] leading-relaxed text-[#1E2926]">
                       Olá, <strong>{draft.name.split(' ')[0]}</strong>! Seu atendimento com{' '}
                       <strong>{draft.referenceDoctor}</strong> está reservado na sua janela protegida:{' '}
                       <strong className="text-[#1F564C]">
@@ -1043,7 +1129,7 @@ export function EmployeeCockpit({
               </div>
             </article>
 
-            {/* Bloco 4: Consultas de Retorno — Prescrições e Resultados de Exames com Leitor OCR */}
+            {/* Bloco 4: Leitura de Prontuário / Resultados de Exames (Visualizador 3 Colunas + Custódia de Integridade SHA-256) */}
             <article className="rounded-xl border border-[#DED9CE] bg-white p-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EFECE6] pb-2.5">
                 <div className="flex items-center gap-2">
@@ -1052,109 +1138,162 @@ export function EmployeeCockpit({
                   </span>
                   <div>
                     <h3 className="text-[12px] font-bold text-[#1E2926]">
-                      Retorno • Prescrições e Resultados de Exames (OCR)
+                      Prontuário & Resultados de Exames (Leitor 3 Colunas + Custódia SHA-256)
                     </h3>
                     <p className="text-[10.5px] text-[#5A6561]">
-                      Extraia dados de laudos ou receitas e valide para atualização automática dos prazos
+                      Importa laudos, receitas e evoluções com visualização central e armazena os arquivos lidos com controle de integridade
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => examFileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C] bg-[#1F564C] px-2.5 py-1 text-[10.5px] font-semibold text-white hover:bg-[#163F37]"
-                >
-                  <Upload className="h-3 w-3" aria-hidden="true" />
-                  Ler Exame / Receita (OCR)
-                </button>
-                <input
-                  ref={examFileInputRef}
-                  type="file"
-                  accept="image/*,.pdf,.txt"
-                  onChange={(e) => void handleExamFileUpload(e)}
-                  className="hidden"
-                />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => void openProntuarioReaderWithSample(0)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#1F564C] bg-[#1F564C] px-2.5 py-1.5 text-[10.5px] font-semibold text-white shadow-xs hover:bg-[#163F37]"
+                  >
+                    <FileScan className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Abrir Leitor de Prontuário / Exame</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => examFileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-[#FAF9F6] px-2.5 py-1.5 text-[10.5px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                  >
+                    <Upload className="h-3 w-3 text-[#1F564C]" aria-hidden="true" />
+                    <span>Anexar Arquivo</span>
+                  </button>
+                  <input
+                    ref={examFileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.txt,.eml,.html,.docx,.xml,.json,.csv"
+                    onChange={(e) => void handleProntuarioFilesUpload(e)}
+                    className="hidden"
+                  />
+                </div>
               </div>
 
-              <div className="mt-2.5 flex flex-wrap gap-1">
-                {SAMPLE_RETURN_OCR_SNIPPETS.map((sample) => (
+              {/* Botões Rápidos de Documentos de Prontuário / Exames */}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {PRONTUARIO_SAMPLE_DOCUMENTS.map((sample, idx) => (
                   <button
-                    key={sample.label}
+                    key={sample.fileName}
                     type="button"
-                    onClick={() => {
-                      setOcrExamRaw(sample.text);
-                      parseOcrForReturnExam(sample.text);
-                    }}
-                    className="rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[10px] font-medium text-[#1E2926] hover:border-[#1F564C] hover:bg-[#EEF6F3] hover:text-[#1F564C]"
+                    onClick={() => void openProntuarioReaderWithSample(idx)}
+                    className="rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C] hover:bg-[#EEF6F3] hover:text-[#1F564C]"
                   >
-                    + {sample.label}
+                    + Ler {sample.label}
                   </button>
                 ))}
               </div>
 
-              <div className="mt-2.5 flex gap-1.5">
-                <input
-                  type="text"
-                  value={ocrExamRaw}
-                  onChange={(e) => setOcrExamRaw(e.target.value)}
-                  placeholder="Digite ou cole resultado de exame / prescrição para converter..."
-                  className={FIELD_CLASS}
-                />
-                <button
-                  type="button"
-                  onClick={() => parseOcrForReturnExam(ocrExamRaw)}
-                  disabled={!ocrExamRaw.trim()}
-                  className="shrink-0 rounded-lg border border-[#1F564C] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#1F564C] hover:bg-[#EEF6F3] disabled:opacity-40"
-                >
-                  Converter
-                </button>
+              {/* Repositório de Arquivos Lidos & Controle de Segurança da Integridade da Informação */}
+              <div className="mt-3 rounded-xl border border-[#C6E4DA] bg-[#F4F9F7] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5 text-[#1F564C]" aria-hidden="true" />
+                    <span className="text-[11px] font-bold text-[#1E2926]">
+                      Arquivos Lidos e Armazenados no Prontuário (Integridade SHA-256)
+                    </span>
+                  </div>
+                  <span className="rounded-full bg-[#1F564C] px-2 py-0.5 text-[9.5px] font-bold text-white">
+                    {storedDocs.length} arquivo(s) sob custódia
+                  </span>
+                </div>
+
+                {storedDocs.length === 0 ? (
+                  <p className="mt-2 rounded-lg border border-dashed border-[#C6E4DA] bg-white/80 px-3 py-2.5 text-center text-[10.5px] text-[#5A6561]">
+                    Nenhum arquivo de prontuário/exame arquivado ainda. Clique em{' '}
+                    <strong>Abrir Leitor de Prontuário / Exame</strong> para ler e armazenar com hash SHA-256.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {storedDocs.map((sdoc) => (
+                      <li
+                        key={sdoc.id}
+                        className="flex items-center justify-between gap-2 rounded-lg border border-[#DCD7CC] bg-white px-2.5 py-2 text-[11px]"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Archive className="h-3.5 w-3.5 shrink-0 text-[#1F564C]" />
+                            <span className="truncate font-bold text-[#1E2926]">
+                              {sdoc.fileName}
+                            </span>
+                            <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9px] font-bold text-[#1F564C]">
+                              {sdoc.docKind}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[9.5px] text-[#5A6561]">
+                            <span>{sdoc.importedAt}</span>
+                            <span>•</span>
+                            <span className="font-mono text-[#1F564C]">
+                              SHA-256: {sdoc.sha256IntegrityHash.slice(0, 14)}…
+                            </span>
+                            <span>•</span>
+                            <span>{sdoc.fieldsUpdated.length} campo(s) auditado(s)</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setInspectedStoredDoc(
+                              inspectedStoredDoc?.id === sdoc.id ? null : sdoc
+                            )
+                          }
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#DCD7CC] bg-[#FAF9F6] px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C] hover:text-[#1F564C]"
+                        >
+                          <Eye className="h-3 w-3" aria-hidden="true" />
+                          <span>
+                            {inspectedStoredDoc?.id === sdoc.id ? 'Fechar' : 'Inspecionar'}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {inspectedStoredDoc && (
+                  <div className="mt-2.5 rounded-lg border border-[#1F564C]/30 bg-white p-3 text-[11px]">
+                    <div className="flex items-center justify-between border-b border-[#EFECE6] pb-1.5">
+                      <span className="font-bold text-[#1F564C]">
+                        Registro de Auditoria e Integridade: {inspectedStoredDoc.fileName}
+                      </span>
+                      <span className="font-mono text-[9.5px] text-[#5A6561]">
+                        Hash: {inspectedStoredDoc.sha256IntegrityHash.slice(0, 24)}…
+                      </span>
+                    </div>
+                    {inspectedStoredDoc.fieldsUpdated.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-[10px] font-bold uppercase text-[#5A6561]">
+                          Campos Atualizados a partir deste Documento:
+                        </p>
+                        <ul className="mt-1 space-y-1 text-[10.5px]">
+                          {inspectedStoredDoc.fieldsUpdated.map((fu, i) => (
+                            <li key={i} className="rounded bg-[#FAF9F6] px-2 py-1">
+                              <strong>{fu.label}:</strong> {fu.before} →{' '}
+                              <strong className="text-[#1F564C]">{fu.after}</strong>{' '}
+                              <span className="text-[9.5px] text-[#5A6561]">
+                                (“{fu.evidence}”)
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <div className="mt-2">
+                      <p className="text-[10px] font-bold uppercase text-[#5A6561]">
+                        Conteúdo Arquivado (Somente Leitura • Imutável):
+                      </p>
+                      <pre className="mt-1 max-h-36 overflow-y-auto whitespace-pre-wrap rounded border border-[#EFECE6] bg-[#FAF9F6] p-2 font-mono text-[10px] text-[#1E2926]">
+                        {inspectedStoredDoc.extractedText}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Card de Validação pelo Insersor */}
-              {pendingOcrEntry && (
-                <div className="mt-3 rounded-lg border border-[#C6E4DA] bg-[#EEF6F3] p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
-                      Validação de Leitura OCR • {pendingOcrEntry.category}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setPendingOcrEntry(null)}
-                      className="text-[10px] text-[#5A6561] hover:text-[#C84B31]"
-                    >
-                      Descartar
-                    </button>
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    <input
-                      type="text"
-                      value={pendingOcrEntry.title}
-                      onChange={(e) =>
-                        setPendingOcrEntry({ ...pendingOcrEntry, title: e.target.value })
-                      }
-                      className="w-full rounded border border-[#C6E4DA] bg-white px-2 py-1 text-[11.5px] font-semibold text-[#1E2926]"
-                    />
-                    <textarea
-                      rows={2}
-                      value={pendingOcrEntry.details}
-                      onChange={(e) =>
-                        setPendingOcrEntry({ ...pendingOcrEntry, details: e.target.value })
-                      }
-                      className="w-full rounded border border-[#C6E4DA] bg-white px-2 py-1 text-[11px] text-[#1E2926]"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleValidateAndAddExamEntry}
-                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1F564C] px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-[#163F37]"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Validar Registro e Atualizar Prazos Automaticamente
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Lista de Prescrições e Exames Registrados */}
+              {/* Lista de Prescrições e Exames Clínicos Registrados */}
               <div className="mt-3 space-y-2">
                 {(draft.examResultsAndPrescriptions || []).length === 0 ? (
                   <p className="rounded-lg border border-dashed border-[#DCD7CC] bg-[#FAF9F6] px-3 py-3 text-center text-[11px] text-[#8A938F]">
@@ -1174,8 +1313,15 @@ export function EmployeeCockpit({
                           <span className="text-[10px] text-[#5A6561]">
                             {formatDateBr(item.date)} • {item.sourceMethod}
                           </span>
+                          {item.sha256Hash && (
+                            <span className="rounded bg-white px-1.5 py-0.5 font-mono text-[9px] text-[#1F564C]">
+                              SHA-256: {item.sha256Hash.slice(0, 8)}…
+                            </span>
+                          )}
                         </div>
-                        <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">{item.title}</p>
+                        <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">
+                          {item.title}
+                        </p>
                         <p className="mt-0.5 text-[11px] leading-snug text-[#5A6561]">
                           {item.details}
                         </p>
@@ -1281,6 +1427,301 @@ export function EmployeeCockpit({
           </div>
         </div>
       </div>
+
+      {/* ======================================================================== */}
+      {/* MODAL DE 3 COLUNAS: LEITOR DE PRONTUÁRIO E RESULTADOS DE EXAME + SHA-256 */}
+      {/* ======================================================================== */}
+      {isProntuarioReaderOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E2926]/65 p-2 backdrop-blur-[2px] sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Leitor Interativo de Prontuário e Resultados de Exame"
+        >
+          <div className="flex h-[90vh] w-full max-w-[1480px] flex-col overflow-hidden rounded-2xl border border-[#D8D1C5] bg-[#FAF9F6] shadow-2xl">
+            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#DED9CE] bg-white px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F564C] text-white">
+                  <FileScan className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="text-[13.5px] font-bold text-[#1E2926]">
+                    Leitor de Prontuário, Exames e Prescrições — {draft.name} (Mat. {draft.matricula})
+                  </h3>
+                  <p className="text-[11px] text-[#5A6561]">
+                    Estrutura em 3 colunas com destaque de evidência no documento e arquivamento imutável (SHA-256) no prontuário
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => examFileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1 rounded-lg bg-[#1F564C] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#163F37]"
+                >
+                  <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Adicionar Laudos / Prontuários</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsProntuarioReaderOpen(false)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5A6561] hover:text-[#1E2926]"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Fechar Leitor</span>
+                </button>
+              </div>
+            </header>
+
+            <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-12">
+              {/* Coluna Esquerda (3/12): Documentos de Prontuário / Exames Inseridos */}
+              <aside className="flex min-h-0 flex-col border-r border-[#DED9CE] bg-[#F2EFE8] lg:col-span-3">
+                <div className="border-b border-[#DED9CE] p-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#1F564C]">
+                    1. Documentos Clínicos em Lote ({prontuarioQueue.length})
+                  </span>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {PRONTUARIO_SAMPLE_DOCUMENTS.map((s, i) => (
+                      <button
+                        key={s.fileName}
+                        type="button"
+                        onClick={() => void openProntuarioReaderWithSample(i)}
+                        className="rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[10px] font-semibold text-[#1E2926] hover:border-[#1F564C]"
+                      >
+                        + {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  <ul className="space-y-1.5">
+                    {prontuarioQueue.map((item, idx) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProntuarioIdx(idx);
+                            setActiveProntuarioField(null);
+                          }}
+                          className={`flex w-full items-start justify-between gap-2 rounded-xl border p-2.5 text-left ${
+                            idx === prontuarioIdx
+                              ? 'border-[#1F564C] bg-white shadow-xs'
+                              : 'border-[#DED9CE] bg-white/70'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[11.5px] font-bold text-[#1E2926]">
+                              {item.doc.name}
+                            </p>
+                            <p className="text-[10px] text-[#5A6561]">
+                              {KIND_LABEL[item.extraction.kind]} • SHA-256:{' '}
+                              {item.doc.sha256Hash.slice(0, 8)}…
+                            </p>
+                          </div>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold ${
+                              item.status === 'ok'
+                                ? 'bg-[#EEF6F3] text-[#1F564C]'
+                                : 'bg-[#FDF7EC] text-[#C26D27]'
+                            }`}
+                          >
+                            {item.status === 'ok' ? 'Arquivado' : 'Conferir'}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </aside>
+
+              {/* Coluna Central (5/12): Visualização do Documento Clínico / Laudo */}
+              <section className="flex min-h-0 flex-col border-r border-[#DED9CE] bg-[#E8E3D9] lg:col-span-5">
+                {currentProntuarioItem ? (
+                  <>
+                    <div className="flex items-center justify-between border-b border-[#DED9CE] bg-white px-3.5 py-2">
+                      <div className="flex items-center gap-1 rounded-lg bg-[#F2EFE8] p-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setProntuarioTab('rendered')}
+                          className={`rounded-md px-2.5 py-1 text-[11px] font-semibold ${
+                            prontuarioTab === 'rendered'
+                              ? 'bg-[#1F564C] text-white'
+                              : 'text-[#5A6561]'
+                          }`}
+                        >
+                          Documento Clínico
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setProntuarioTab('raw')}
+                          className={`rounded-md px-2.5 py-1 text-[11px] font-semibold ${
+                            prontuarioTab === 'raw'
+                              ? 'bg-[#1F564C] text-white'
+                              : 'text-[#5A6561]'
+                          }`}
+                        >
+                          Texto Lido (OCR)
+                        </button>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded bg-[#EEF6F3] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#1F564C]">
+                        <ShieldCheck className="h-3 w-3" />
+                        SHA-256: {currentProntuarioItem.doc.sha256Hash.slice(0, 12)}…
+                      </span>
+                    </div>
+
+                    {activeProntuarioDiff && (
+                      <div className="border-b border-[#FDE68A] bg-[#FEFCE8] px-3.5 py-1.5 text-[11px] text-[#854D0E]">
+                        Trecho de origem de <strong>{activeProntuarioDiff.label}</strong>:{' '}
+                        “{activeProntuarioDiff.evidence}”
+                      </div>
+                    )}
+
+                    <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                      <div className="mx-auto max-w-[650px] rounded-xl border border-[#D8D1C5] bg-white p-5 shadow-md">
+                        <div className="mb-3 flex items-center justify-between border-b-2 border-[#1F564C] pb-2">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase text-[#1F564C]">
+                              {KIND_LABEL[currentProntuarioItem.extraction.kind]} • Prontuário S+
+                            </span>
+                            <h4 className="text-[13px] font-bold text-[#1E2926]">
+                              {currentProntuarioItem.doc.name}
+                            </h4>
+                          </div>
+                          <span className="rounded bg-[#F2EFE8] px-2 py-0.5 text-[10px] font-semibold text-[#5A6561]">
+                            {currentProntuarioItem.doc.method}
+                          </span>
+                        </div>
+                        <div
+                          className={`whitespace-pre-wrap text-[12px] leading-relaxed text-[#1E2926] ${
+                            prontuarioTab === 'raw' ? 'font-mono' : 'font-sans'
+                          }`}
+                          dangerouslySetInnerHTML={{
+                            __html: highlightProntuarioHtml(
+                              currentProntuarioItem.doc.text ?? '',
+                              activeProntuarioDiff?.evidence ?? ''
+                            ),
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </section>
+
+              {/* Coluna Direita (4/12): Informações Extraídas do Prontuário / Exame */}
+              <aside className="flex min-h-0 flex-col bg-white lg:col-span-4">
+                {currentProntuarioItem ? (
+                  <>
+                    <div className="border-b border-[#DED9CE] bg-[#FAF9F6] p-3.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F564C]">
+                        2. Informações Clínicas e de Retorno Constantes no Documento
+                      </span>
+                      <h4 className="text-[13px] font-bold text-[#1E2926]">
+                        {draft.name} (Mat. {draft.matricula})
+                      </h4>
+                      <p className="text-[10.5px] text-[#5A6561]">
+                        Ao validar, o arquivo original é armazenado no prontuário com hash SHA-256 e os prazos de retorno são recalculados.
+                      </p>
+                    </div>
+
+                    <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3.5">
+                      {currentProntuarioItem.extraction.clinicalSummary && (
+                        <div className="rounded-xl border border-[#C6E4DA] bg-[#EEF6F3] p-3">
+                          <span className="text-[10px] font-bold uppercase text-[#1F564C]">
+                            Resumo Clínico Identificado ({currentProntuarioItem.extraction.clinicalSummary.category})
+                          </span>
+                          <p className="mt-1 text-[11.5px] font-bold text-[#1E2926]">
+                            {currentProntuarioItem.extraction.clinicalSummary.title}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-[#5A6561]">
+                            {currentProntuarioItem.extraction.clinicalSummary.details}
+                          </p>
+                        </div>
+                      )}
+
+                      {currentProntuarioItem.fields.map((field) => {
+                        const opts = ALLOWED[field.key];
+                        return (
+                          <div
+                            key={field.key}
+                            onClick={() => setActiveProntuarioField(field.key)}
+                            className={`rounded-lg border p-2.5 ${
+                              activeProntuarioField === field.key
+                                ? 'border-[#1F564C] bg-[#FAF9F6] ring-2 ring-[#1F564C]/15'
+                                : 'border-[#E5E0D5] bg-white'
+                            }`}
+                          >
+                            <div className="mb-1 flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-[#1E2926]">
+                                {field.label || LABEL[field.key]}
+                              </span>
+                              <span className="rounded bg-[#EEF6F3] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1F564C]">
+                                {field.state === 'new'
+                                  ? 'Novo'
+                                  : field.state === 'changed'
+                                  ? 'Atualiza'
+                                  : 'Confirmado'}
+                              </span>
+                            </div>
+                            {opts ? (
+                              <select
+                                value={field.value}
+                                onFocus={() => setActiveProntuarioField(field.key)}
+                                onChange={(e) =>
+                                  handleProntuarioFieldChange(field.key, e.target.value)
+                                }
+                                className="w-full rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[11.5px]"
+                              >
+                                <option value="">(vazio)</option>
+                                {opts.map((o) => (
+                                  <option key={o} value={o}>
+                                    {o}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={field.value}
+                                onFocus={() => setActiveProntuarioField(field.key)}
+                                onChange={(e) =>
+                                  handleProntuarioFieldChange(field.key, e.target.value)
+                                }
+                                className="w-full rounded border border-[#DCD7CC] bg-white px-2 py-1 text-[11.5px]"
+                              />
+                            )}
+                            <p className="mt-1 truncate text-[10px] text-[#5A6561]">
+                              Evidência: “{field.evidence}”
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <footer className="flex items-center justify-between gap-2 border-t border-[#DED9CE] bg-[#FAF9F6] px-3.5 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsProntuarioReaderOpen(false)}
+                        className="rounded-lg border border-[#DCD7CC] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5A6561]"
+                      >
+                        Fechar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleApplyProntuarioItem}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#1F564C] px-4 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#163F37]"
+                      >
+                        <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Validar, Atualizar Ficha e Arquivar Prontuário</span>
+                      </button>
+                    </footer>
+                  </>
+                ) : null}
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

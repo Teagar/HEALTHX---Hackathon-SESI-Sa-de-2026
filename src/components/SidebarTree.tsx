@@ -3,7 +3,6 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
-  FileScan,
   LayoutList,
   Search,
   Users,
@@ -15,7 +14,6 @@ export interface SidebarTreeProps {
   employees: Employee[];
   selectedEmployeeId: string | null;
   onSelectEmployee: (employeeId: string | null) => void;
-  onOpenNewEmployeeOcr?: () => void;
   mobileOpen?: boolean;
   onCloseMobile?: () => void;
 }
@@ -78,14 +76,14 @@ export function SidebarTree({
   employees,
   selectedEmployeeId,
   onSelectEmployee,
-  onOpenNewEmployeeOcr,
   mobileOpen = false,
   onCloseMobile,
 }: SidebarTreeProps) {
   const [query, setQuery] = useState('');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [showInactive, setShowInactive] = useState(false);
-  const [collapsedCompanies, setCollapsedCompanies] = useState<Set<string>>(
+  // Todos os containers de empresa iniciam colapsados por padrão e só expandem mediante interação do usuário
+  const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(
     () => new Set()
   );
 
@@ -160,7 +158,7 @@ export function SidebarTree({
   }, [filteredEmployees, companies]);
 
   const toggleCompany = (companyId: string) => {
-    setCollapsedCompanies((prev) => {
+    setExpandedCompanies((prev) => {
       const next = new Set(prev);
       if (next.has(companyId)) {
         next.delete(companyId);
@@ -172,7 +170,7 @@ export function SidebarTree({
   };
 
   const isCompanyExpanded = (companyId: string) =>
-    isSearching || !collapsedCompanies.has(companyId);
+    isSearching || expandedCompanies.has(companyId);
 
   const handleSelect = (id: string | null) => {
     onSelectEmployee(id);
@@ -180,7 +178,7 @@ export function SidebarTree({
   };
 
   const content = (
-    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-[#DED9CE] bg-[#F2EFE8]">
+    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-[#DED9CE] bg-[#EAE5DC]">
       <div className="shrink-0 space-y-2.5 border-b border-[#DED9CE] p-3">
         <div className="flex items-center gap-1.5">
           <button
@@ -216,20 +214,6 @@ export function SidebarTree({
             </button>
           )}
         </div>
-
-        {onOpenNewEmployeeOcr && (
-          <button
-            type="button"
-            onClick={() => {
-              if (onCloseMobile) onCloseMobile();
-              onOpenNewEmployeeOcr();
-            }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#1F564C]/30 bg-[#EEF6F3] px-3 py-1.5 text-[11.5px] font-semibold text-[#1F564C] transition-colors hover:bg-[#1F564C] hover:text-white"
-          >
-            <FileScan className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Nova Ficha via OCR</span>
-          </button>
-        )}
 
         <div className="relative">
           <Search
@@ -283,7 +267,7 @@ export function SidebarTree({
         )}
       </div>
 
-      {/* Lista de Empresas e Funcionários */}
+      {/* Lista de Empresas e Funcionários (containers iniciam colapsados) */}
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {groupedCompanies.length === 0 ? (
           <div className="mx-1 mt-4 rounded-xl border border-dashed border-[#DCD7CC] bg-white/80 px-3 py-6 text-center">
@@ -302,7 +286,7 @@ export function SidebarTree({
                     type="button"
                     onClick={() => toggleCompany(company.id)}
                     aria-expanded={expanded}
-                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[#E6E1D6]"
+                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[#DDD7CB]"
                   >
                     {expanded ? (
                       <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#5A6561]" />

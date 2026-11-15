@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DOCUMENTO FICTÍCIO PARA DEMONSTRAÇÃO DO SECILITA · NÃO CONTÉM DADOS REAIS -->
+<agenda exportadoEm="2026-11-14T18:00:00-03:00" unidade="Unidade Demo">
+  <atendimento>
+    <matricula>20269009</matricula>
+    <nome>Sandra Reis Mota</nome>
+    <especialidade>Clínico geral</especialidade>
+    <data>2026-11-09</data>
+    <situacao>Compareceu</situacao>
+    <classificacaoRisco>2</classificacaoRisco>
+    <previsaoRetorno>2027-05-09</previsaoRetorno>
+  </atendimento>
+  <atendimento>
+    <matricula>20269010</matricula>
+    <nome>Eduardo Lima Fontes</nome>
+    <especialidade>Nutrição</especialidade>
+    <data>2026-11-10</data>
+    <situacao>Faltou</situacao>
+  </atendimento>
+  <atendimento>
+    <matricula>20269011</matricula>
+    <nome>Beatriz Soares Cunha</nome>
+    <especialidade>Psicologia</especialidade>
+    <data>2026-11-21</data>
+    <situacao>Agendado</situacao>
+  </atendimento>
+</agenda>

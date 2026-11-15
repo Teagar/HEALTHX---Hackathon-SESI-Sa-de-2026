@@ -18,12 +18,20 @@ import {
   parseSesiCsvContent,
 } from './queueService';
 import type {
+  AppRoute,
   AutomationLogEntry,
-  ChannelTab,
   DatabaseConnectionStatus,
   Employee,
   ShiftWindowConfig,
 } from './types';
+import LandingPortal from './components/LandingPortal';
+
+const VALID_ROUTES: AppRoute[] = ['/', '/home', '/admin', '/gestor'];
+
+function readRouteFromLocation(): AppRoute {
+  const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+  return (VALID_ROUTES as string[]).includes(path) ? (path as AppRoute) : '/';
+}
 
 const EMPLOYEES_STORAGE_KEY = 'healthx_sesi_employees_v5_teams';
 
@@ -94,7 +102,21 @@ export function App() {
   const [dbStatus, setDbStatus] = useState<DatabaseConnectionStatus | null>(null);
   const [backendOnline, setBackendOnline] = useState(false);
 
-  const [activeChannel, setActiveChannel] = useState<ChannelTab>('medical');
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(readRouteFromLocation);
+
+  useEffect(() => {
+    const onPop = () => setCurrentRoute(readRouteFromLocation());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const navigate = useCallback((route: AppRoute) => {
+    if (window.location.pathname !== route) {
+      window.history.pushState({}, '', route);
+    }
+    setCurrentRoute(route);
+    setMobileSidebarOpen(false);
+  }, []);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -233,28 +255,61 @@ export function App() {
     })();
   };
 
-  const handleInsertNewEmployee = (newEmp: Employee) => {
-    const normalized = normalizeEmployeeAfterSave(newEmp);
-    setEmployees((prev) => [normalized, ...prev]);
-    setSelectedEmployeeId(normalized.id);
-    setActiveChannel('medical');
-
-    pushToast({
-      tone: 'success',
-      title: 'Ficha inserida e validada via OCR',
-      message: `${normalized.name} (${normalized.companyName}) registrado na Coordenação do Cuidado com retorno programado (${normalized.nextVisit}).`,
-    });
-
+  const persistEmployee = (emp: Employee) => {
     void (async () => {
       if (!backendOnline) return;
       const payload = await apiRequest<ApiStatePayload>(
-        `/api/employees/${encodeURIComponent(normalized.id)}`,
-        { method: 'PUT', body: JSON.stringify(normalized) },
+        `/api/employees/${encodeURIComponent(emp.id)}`,
+        { method: 'PUT', body: JSON.stringify(emp) },
       );
       if (payload) {
         applyServerState(payload);
       }
     })();
+  };
+
+  // Upsert: atualiza a ficha existente (mesmo id) ou insere novo funcionário cadastrado via importação
+  const handleInsertNewEmployee = (newEmp: Employee) => {
+    const normalized = normalizeEmployeeAfterSave(newEmp);
+    const exists = employees.some((employee) => employee.id === normalized.id);
+    setEmployees((prev) =>
+      prev.some((employee) => employee.id === normalized.id)
+        ? prev.map((employee) => (employee.id === normalized.id ? normalized : employee))
+        : [normalized, ...prev],
+    );
+    if (!exists) {
+      setSelectedEmployeeId(normalized.id);
+    }
+
+    pushToast({
+      tone: 'success',
+      title: exists ? 'Ficha atualizada a partir do documento' : 'Novo funcionário cadastrado',
+      message: `${normalized.name} (${normalized.companyName}) • Retorno programado: ${normalized.nextVisit}.`,
+    });
+
+    persistEmployee(normalized);
+  };
+
+  const handleBatchInsertEmployees = (batch: Employee[]) => {
+    if (!batch.length) return;
+    const normalizedBatch = batch.map((emp) => normalizeEmployeeAfterSave(emp));
+    const byId = new Map(normalizedBatch.map((emp) => [emp.id, emp]));
+    let insertedCount = 0;
+    setEmployees((prev) => {
+      const prevIds = new Set(prev.map((employee) => employee.id));
+      const updated = prev.map((employee) => byId.get(employee.id) ?? employee);
+      const inserted = normalizedBatch.filter((emp) => !prevIds.has(emp.id));
+      insertedCount = inserted.length;
+      return [...inserted, ...updated];
+    });
+    pushToast({
+      tone: 'success',
+      title: 'Importação em lote concluída',
+      message: `${normalizedBatch.length} documento(s) aplicados às fichas${
+        insertedCount ? ` (${insertedCount} novo(s) cadastro(s))` : ''
+      }.`,
+    });
+    normalizedBatch.forEach(persistEmployee);
   };
 
   const handleSendWhatsApp = (employeeId: string) => {
@@ -517,7 +572,6 @@ export function App() {
     setShiftConfigs(structuredClone(INITIAL_SHIFT_WINDOWS));
     setAutomationLogs(getDefaultAutomationLogs());
     setSelectedEmployeeId(null);
-    setActiveChannel('medical');
     setDbStatus((prev) =>
       prev
         ? {
@@ -545,25 +599,35 @@ export function App() {
     })();
   };
 
+  if (currentRoute === '/') {
+    return (
+      <LandingPortal
+        onNavigate={navigate}
+        totalEmployees={employees.length}
+        activeEmployees={employees.filter((e) => e.status !== 'INATIVO').length}
+        companiesCount={b2bMetrics.companies.length}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-[#F5F3EE] text-[#1E2926]">
       <TopBar
         employees={employees}
-        activeChannel={activeChannel}
-        onChannelChange={setActiveChannel}
+        currentRoute={currentRoute}
+        onNavigate={navigate}
         onOpenNewEmployeeOcr={() => setIsOcrModalOpen(true)}
         onResetDemo={handleResetDemo}
         onToggleMobileSidebar={() => setMobileSidebarOpen((v) => !v)}
         dbStatus={dbStatus}
       />
 
-      {activeChannel === 'medical' && (
-        <div className="relative flex min-h-0 flex-1 overflow-hidden">
+      {currentRoute === '/home' && (
+        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#E2DDD3]">
           <SidebarTree
             employees={employees}
             selectedEmployeeId={selectedEmployeeId}
             onSelectEmployee={setSelectedEmployeeId}
-            onOpenNewEmployeeOcr={() => setIsOcrModalOpen(true)}
             mobileOpen={mobileSidebarOpen}
             onCloseMobile={() => setMobileSidebarOpen(false)}
           />
@@ -589,7 +653,7 @@ export function App() {
         </div>
       )}
 
-      {activeChannel === 'admin' && (
+      {currentRoute === '/admin' && (
         <AdminChannel
           employees={employees}
           automationLogs={automationLogs}
@@ -601,15 +665,19 @@ export function App() {
         />
       )}
 
-      {activeChannel === 'company_b2b' && (
+      {currentRoute === '/gestor' && (
         <CompanyB2BChannel metrics={b2bMetrics} />
       )}
 
-      <NewEmployeeOcrModal
-        isOpen={isOcrModalOpen}
-        onClose={() => setIsOcrModalOpen(false)}
-        onConfirmInsert={handleInsertNewEmployee}
-      />
+      {currentRoute === '/home' && (
+        <NewEmployeeOcrModal
+          isOpen={isOcrModalOpen}
+          onClose={() => setIsOcrModalOpen(false)}
+          employees={employees}
+          onConfirmInsert={handleInsertNewEmployee}
+          onConfirmBatchInsert={handleBatchInsertEmployees}
+        />
+      )}
 
       <div
         className="pointer-events-none fixed bottom-3 right-3 z-50 flex w-[min(92vw,360px)] flex-col gap-2"
