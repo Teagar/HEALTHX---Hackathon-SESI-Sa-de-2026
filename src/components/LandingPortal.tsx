@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Info, ShieldCheck, Stethoscope, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Info, Linkedin, ShieldCheck, Stethoscope, Users } from 'lucide-react';
 import type { AppRoute } from '../types';
 
 export interface LandingPortalProps {
@@ -57,12 +57,13 @@ const CARDS: {
   },
 ];
 
-const CREATORS = [
-  'Calyson Andrade Britto',
-  'Carlos Henrique Gonzaga Lima',
-  'Gabriel Boaventura Silva',
-  'Pedro Henrique Silva Souza Filho',
-  'Thiago Bastos Cerqueira',
+/** Criadores do projeto. `linkedin` vazio = mostra só o nome, sem link. */
+const CREATORS: { name: string; linkedin?: string }[] = [
+  { name: 'Calyson Andrade Britto' },
+  { name: 'Carlos Henrique Gonzaga Lima' },
+  { name: 'Gabriel Boaventura Silva' },
+  { name: 'Pedro Henrique Silva Souza Filho' },
+  { name: 'Thiago Bastos Cerqueira', linkedin: 'https://www.linkedin.com/in/teagar/' },
 ];
 
 function initials(name: string): string {
@@ -192,17 +193,37 @@ export function LandingPortal({
             Criado por
           </span>
           <ul className="flex flex-wrap justify-center gap-2">
-            {CREATORS.map((name) => (
-              <li
-                key={name}
-                className="inline-flex items-center gap-2 rounded-full border border-[#E4E7EC] bg-white py-1 pl-1 pr-3 text-[12px] font-medium text-[#344054] shadow-xs"
-              >
+            {CREATORS.map(({ name, linkedin }) => {
+              const chip =
+                'inline-flex items-center gap-2 rounded-full border border-[#E4E7EC] bg-white py-1 pl-1 pr-3 text-[12px] font-medium text-[#344054] shadow-xs';
+              const avatar = (
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ECF8F3] text-[10px] font-semibold text-[#0E7A5F]">
                   {initials(name)}
                 </span>
-                {name}
-              </li>
-            ))}
+              );
+              return (
+                <li key={name}>
+                  {linkedin ? (
+                    <a
+                      href={linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`LinkedIn de ${name}`}
+                      className={`${chip} hover:border-[#0A66C2] hover:text-[#0A66C2]`}
+                    >
+                      {avatar}
+                      {name}
+                      <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" aria-label="LinkedIn" />
+                    </a>
+                  ) : (
+                    <span className={chip}>
+                      {avatar}
+                      {name}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <p className="text-[11px] text-[#98A2B3]">
             Hackathon SESI Saúde 2026 · todos os dados são fictícios
