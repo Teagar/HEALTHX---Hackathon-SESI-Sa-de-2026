@@ -178,11 +178,11 @@ public/demo/                    # 14 documentos de exemplo (fictícios)
 
 Criado por:
 
-- Calyson Andrade Britto
-- Carlos Henrique Gonzaga Lima
+- [Calyson Andrade Britto](https://www.linkedin.com/in/calyson-britto/)
+- [Carlos Henrique Gonzaga Lima](https://www.linkedin.com/in/carlos-henrique-487b0a260/)
 - Gabriel Boaventura Silva
-- Pedro Henrique Silva Souza Filho
-- Thiago Bastos Cerqueira
+- [Pedro Henrique Silva Souza Filho](https://www.linkedin.com/in/pedro-henrique-211b70346/)
+- [Thiago Bastos Cerqueira](https://www.linkedin.com/in/teagar/)
 
 - Repositório original do protótipo: [CalysonB/HEALTHX---Hackathon-SESI-Sa-de-2026](https://github.com/CalysonB/HEALTHX---Hackathon-SESI-Sa-de-2026)
 - Leitor de documentos baseado em [Teagar/SECILITA_PLANILHAS](https://github.com/Teagar/SECILITA_PLANILHAS)

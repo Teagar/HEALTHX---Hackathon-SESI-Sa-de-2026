@@ -59,10 +59,10 @@ const CARDS: {
 
 /** Criadores do projeto. `linkedin` vazio = mostra só o nome, sem link. */
 const CREATORS: { name: string; linkedin?: string }[] = [
-  { name: 'Calyson Andrade Britto' },
-  { name: 'Carlos Henrique Gonzaga Lima' },
+  { name: 'Calyson Andrade Britto', linkedin: 'https://www.linkedin.com/in/calyson-britto/' },
+  { name: 'Carlos Henrique Gonzaga Lima', linkedin: 'https://www.linkedin.com/in/carlos-henrique-487b0a260/' },
   { name: 'Gabriel Boaventura Silva' },
-  { name: 'Pedro Henrique Silva Souza Filho' },
+  { name: 'Pedro Henrique Silva Souza Filho', linkedin: 'https://www.linkedin.com/in/pedro-henrique-211b70346/' },
   { name: 'Thiago Bastos Cerqueira', linkedin: 'https://www.linkedin.com/in/teagar/' },
 ];
 
