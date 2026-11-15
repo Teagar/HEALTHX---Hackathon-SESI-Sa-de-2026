@@ -615,6 +615,7 @@ export function EmployeeCockpit({
               <SectionHeader
                 icon={<FileText className="h-4 w-4" aria-hidden="true" />}
                 title="Coordenação do Cuidado • Identificação, Vínculo e Equipe Multiprofissional"
+                tone="cuidado"
                 subtitle="Cadastro ocupacional, médico de referência e histórico de consultas multiprofissionais"
               />
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
@@ -814,6 +815,7 @@ export function EmployeeCockpit({
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <EditableListCard
+                    tone="habitos"
                     title="Hábitos de Vida"
                     icon={<HeartPulse className="h-3.5 w-3.5" aria-hidden="true" />}
                     items={draft.habits}
@@ -821,6 +823,7 @@ export function EmployeeCockpit({
                     onChange={(items) => update('habits', items)}
                   />
                   <EditableListCard
+                    tone="condicoes"
                     title="Condições / DCNT / Mental"
                     icon={<Activity className="h-3.5 w-3.5" aria-hidden="true" />}
                     items={draft.conditions}
@@ -828,6 +831,7 @@ export function EmployeeCockpit({
                     onChange={(items) => update('conditions', items)}
                   />
                   <EditableListCard
+                    tone="medicacoes"
                     title="Medicações e Rastreio"
                     icon={<Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />}
                     items={draft.medsAndScreening}
@@ -843,6 +847,7 @@ export function EmployeeCockpit({
               <SectionHeader
                 icon={<ListChecks className="h-4 w-4" aria-hidden="true" />}
                 title="Plano de Cuidados Individual (PCI)"
+                tone="pci"
                 subtitle="Envio do plano, verificação de adesão às metas e status assistencial"
               />
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -884,6 +889,7 @@ export function EmployeeCockpit({
 
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 <EditableListCard
+                  tone="pci"
                   title="Metas Pactuadas com o Colaborador"
                   icon={<Sparkles className="h-3.5 w-3.5" aria-hidden="true" />}
                   items={draft.pciRecommendations}
@@ -891,6 +897,7 @@ export function EmployeeCockpit({
                   onChange={(items) => update('pciRecommendations', items)}
                 />
                 <EditableListCard
+                  tone="pci"
                   title="Exames e Encaminhamentos Solicitados"
                   icon={<ClipboardList className="h-3.5 w-3.5" aria-hidden="true" />}
                   items={draft.pciExams}
@@ -954,6 +961,7 @@ export function EmployeeCockpit({
               <SectionHeader
                 icon={<CalendarClock className="h-4 w-4" aria-hidden="true" />}
                 title="Gestão de Retorno & Integração de Agenda (S+ / Microsoft Teams)"
+                tone="retorno"
                 subtitle="Prazos calculados automaticamente sem necessidade de digitação manual"
               />
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1135,21 +1143,13 @@ export function EmployeeCockpit({
 
             {/* Bloco 4: Leitura de Prontuário / Resultados de Exames (Visualizador 3 Colunas + Custódia de Integridade SHA-256) */}
             <article className="rounded-xl border border-[#E4E7EC] bg-white p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F2F4F7] pb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ECF8F3] text-[#0E7A5F]">
-                    <FileScan className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h3 className="text-[12px] font-semibold text-[#101828]">
-                      Prontuário & Resultados de Exames (Leitor 3 Colunas + Custódia SHA-256)
-                    </h3>
-                    <p className="text-[10.5px] text-[#475467]">
-                      Importa laudos, receitas e evoluções com visualização central e armazena os arquivos lidos com controle de integridade
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
+              <SectionHeader
+                icon={<FileScan className="h-4 w-4" aria-hidden="true" />}
+                title="Prontuário & Resultados de Exames (Leitor 3 Colunas + Custódia SHA-256)"
+                subtitle="Importa laudos, receitas e evoluções com visualização central e armazena os arquivos lidos com controle de integridade"
+                tone="prontuario"
+                actions={
+                  <>
                   <button
                     type="button"
                     onClick={() => void openProntuarioReaderWithSample(0)}
@@ -1174,8 +1174,9 @@ export function EmployeeCockpit({
                     onChange={(e) => void handleProntuarioFilesUpload(e)}
                     className="hidden"
                   />
-                </div>
-              </div>
+                  </>
+                }
+              />
 
               {/* Botões Rápidos de Documentos de Prontuário / Exames */}
               <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -1349,6 +1350,7 @@ export function EmployeeCockpit({
               <SectionHeader
                 icon={<ClipboardList className="h-4 w-4" aria-hidden="true" />}
                 title="Histórico e Contatos Mensais de Monitoramento (2026)"
+                tone="historico"
                 subtitle="Registro automático de gestão de retorno (Sálvia / Equipe APS) e pré-consulta rápida"
               />
               <div className="mt-3">
@@ -1730,27 +1732,58 @@ export function EmployeeCockpit({
   );
 }
 
+type SectionTone = 'cuidado' | 'pci' | 'retorno' | 'prontuario' | 'historico';
+
+/** Cor de cada bloco da ficha: faixa do cabeçalho, ícone e título. */
+const SECTION_TONES: Record<SectionTone, { band: string; icon: string; title: string; subtitle: string }> = {
+  cuidado: { band: 'bg-[#E8EFF8] border-[#D2DDEE]', icon: 'bg-[#2F5D9E]', title: 'text-[#173763]', subtitle: 'text-[#4A6283]' },
+  pci: { band: 'bg-[#EFEBFA] border-[#DCD3F3]', icon: 'bg-[#6B4BC2]', title: 'text-[#3A2878]', subtitle: 'text-[#6A5A9C]' },
+  retorno: { band: 'bg-[#E2F2EB] border-[#C7EADC]', icon: 'bg-[#0E7A5F]', title: 'text-[#0B4A3B]', subtitle: 'text-[#3F6E61]' },
+  prontuario: { band: 'bg-[#E3F0F6] border-[#C9E1EC]', icon: 'bg-[#1C6E8C]', title: 'text-[#11485D]', subtitle: 'text-[#45707F]' },
+  historico: { band: 'bg-[#ECEEF2] border-[#D9DDE5]', icon: 'bg-[#475467]', title: 'text-[#1D2939]', subtitle: 'text-[#5B6578]' },
+};
+
 interface SectionHeaderProps {
   icon: ReactNode;
   title: string;
   subtitle: string;
+  tone: SectionTone;
+  actions?: ReactNode;
 }
 
-function SectionHeader({ icon, title, subtitle }: SectionHeaderProps) {
+function SectionHeader({ icon, title, subtitle, tone, actions }: SectionHeaderProps) {
+  const t = SECTION_TONES[tone];
   return (
-    <div className="flex items-center gap-2.5 border-b border-[#F2F4F7] pb-2.5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#ECF8F3] text-[#0E7A5F]">
-        {icon}
-      </span>
-      <div className="min-w-0">
-        <h2 className="truncate text-[12px] font-semibold text-[#101828]">{title}</h2>
-        <p className="truncate text-[10.5px] text-[#475467]">{subtitle}</p>
+    <div
+      className={`-mx-4 -mt-4 flex flex-wrap items-center justify-between gap-2 rounded-t-xl border-b px-4 py-3 ${t.band}`}
+    >
+      <div className="flex min-w-0 items-center gap-2.5">
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-xs ${t.icon}`}
+        >
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h2 className={`text-[12.5px] font-semibold leading-snug ${t.title}`}>{title}</h2>
+          <p className={`truncate text-[10.5px] ${t.subtitle}`}>{subtitle}</p>
+        </div>
       </div>
+      {actions && <div className="flex flex-wrap items-center gap-1.5">{actions}</div>}
     </div>
   );
 }
 
+type ListTone = 'habitos' | 'condicoes' | 'medicacoes' | 'pci';
+
+const LIST_TONES: Record<ListTone, { head: string; text: string; add: string }> = {
+  habitos: { head: 'bg-[#E2F2EB] border-[#C7EADC]', text: 'text-[#0B4A3B]', add: 'border-[#0E7A5F] bg-[#0E7A5F] hover:bg-[#0B5F4A]' },
+  condicoes: { head: 'bg-[#FBEAE6] border-[#F3CFC6]', text: 'text-[#8A2F1C]', add: 'border-[#C84B31] bg-[#C84B31] hover:bg-[#A63C26]' },
+  medicacoes: { head: 'bg-[#E8EFF8] border-[#D2DDEE]', text: 'text-[#173763]', add: 'border-[#2F5D9E] bg-[#2F5D9E] hover:bg-[#244B82]' },
+  pci: { head: 'bg-[#EFEBFA] border-[#DCD3F3]', text: 'text-[#3A2878]', add: 'border-[#6B4BC2] bg-[#6B4BC2] hover:bg-[#563A9F]' },
+};
+
 interface EditableListCardProps {
+  tone: ListTone;
   title: string;
   icon: ReactNode;
   items: string[];
@@ -1759,6 +1792,7 @@ interface EditableListCardProps {
 }
 
 function EditableListCard({
+  tone,
   title,
   icon,
   items,
@@ -1775,12 +1809,14 @@ function EditableListCard({
   };
 
   return (
-    <div className="flex flex-col rounded-lg border border-[#EAECF0] bg-[#F9FAFB] p-2.5">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold text-[#101828]">
-        <span className="text-[#0E7A5F]">{icon}</span>
+    <div className="flex flex-col overflow-hidden rounded-lg border border-[#EAECF0] bg-[#F9FAFB]">
+      <div
+        className={`flex items-center gap-1.5 border-b px-2.5 py-2 text-[10.5px] font-semibold ${LIST_TONES[tone].head} ${LIST_TONES[tone].text}`}
+      >
+        <span>{icon}</span>
         <span className="truncate">{title}</span>
       </div>
-      <ul className="mb-2 flex-1 space-y-1">
+      <ul className="mx-2.5 mb-2 mt-2.5 flex-1 space-y-1">
         {items.map((item, idx) => (
           <li
             key={`${idx}-${item}`}
@@ -1798,7 +1834,7 @@ function EditableListCard({
           </li>
         ))}
       </ul>
-      <div className="flex gap-1">
+      <div className="mx-2.5 mb-2.5 flex gap-1">
         <input
           type="text"
           value={newItem}
@@ -1816,7 +1852,7 @@ function EditableListCard({
           type="button"
           onClick={handleAdd}
           aria-label={`Adicionar em ${title}`}
-          className="inline-flex items-center justify-center rounded border border-[#0E7A5F] bg-[#0E7A5F] px-2 py-1 text-white hover:bg-[#0B5F4A]"
+          className={`inline-flex items-center justify-center rounded border px-2 py-1 text-white ${LIST_TONES[tone].add}`}
         >
           <Plus className="h-3 w-3" aria-hidden="true" />
         </button>
