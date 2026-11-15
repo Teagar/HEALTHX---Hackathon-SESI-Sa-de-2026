@@ -8,7 +8,7 @@ Hackathon SESI Saúde 2026 · Atenção Primária à Saúde (APS) corporativa
 
 [Demo online](https://sesilita.teagar.com.br) · [Como rodar](#como-rodar) · [Arquitetura](#arquitetura)
 
-![Portal de acesso do SESILITA](docs/img/01-portal.png)
+![Portal de acesso do SESILITA](docs/img/01-portal-v2.png)
 
 </div>
 
@@ -34,13 +34,13 @@ O SESILITA tem **três canais isolados**, cada um com só o que aquele perfil pr
 
 ### 1. Equipe de Saúde (`/home`): quem precisa de cuidado agora
 
-![Dupla fila de priorização](docs/img/02-equipe-filas.png)
+![Dupla fila de priorização](docs/img/02-equipe-filas-v2.png)
 
 - **Dupla fila automática.** Em cima, retorno clínico ordenado por **risco (4 → 1)** e atraso. Embaixo, **busca ativa da 1ª consulta**, ordenada por **mais dias sem agendar**.
 - **Protocolo de risco APS embutido.** Risco 4 tem retorno quinzenal ou mensal, risco 3 a cada 3 meses e riscos 2 e 1 a cada 6 meses. Ao registrar a 1ª consulta, a pessoa migra sozinha da busca ativa para o acompanhamento.
 - **Passe de Cuidado.** O botão **Enviar** manda pelo WhatsApp um horário já pactuado na **janela protegida do turno**. Ele vale como autorização para o líder, **sem revelar o motivo clínico**.
 
-![Ficha única do funcionário](docs/img/03-ficha-unica.png)
+![Ficha única do funcionário](docs/img/03-ficha-unica-v2.png)
 
 - **Ficha única, sem abas escondidas.** Gestão do Cuidado, Plano de Cuidados Individual e Gestão de Retorno ficam na mesma tela, com prazos calculados automaticamente.
 
@@ -48,7 +48,7 @@ O SESILITA tem **três canais isolados**, cada um com só o que aquele perfil pr
 
 O risco é dado pelo médico ou enfermeiro na consulta. A partir dele, o SESILITA ordena a fila e calcula sozinho a data do próximo retorno. O protocolo completo aparece no botão **Entenda os riscos**, na fila da equipe, e na aba **Classificação de risco** do `/admin`.
 
-![Protocolo de classificação de risco](docs/img/07-classificacao-risco.png)
+![Protocolo de classificação de risco](docs/img/07-classificacao-risco-v2.png)
 
 | Risco | Quem é | Fatores típicos (exemplos) | Retorno |
 | :--: | :-- | :-- | :-- |
@@ -62,7 +62,7 @@ Quando a 1ª consulta é registrada, a pessoa recebe um risco de 1 a 4 e passa s
 
 ### 2. Leitor de documentos: do documento à planilha, sem digitar
 
-![Importação de documentos com OCR](docs/img/04-importacao-ocr.png)
+![Importação de documentos com OCR](docs/img/04-importacao-ocr-v2.png)
 
 A equipe solta os documentos que já recebe hoje, e o SESILITA **lê, encontra o trabalhador e preenche os campos da planilha**. Nada é gravado sem a conferência de uma pessoa: cada campo mostra se é **Novo**, se **Muda** ou se está **Igual**, e de que trecho do documento o valor saiu.
 
@@ -80,7 +80,7 @@ O OCR roda **no próprio navegador**: nenhuma imagem ou documento é enviado a s
 
 | Coordenação & Inteligência APS | Portal do Gestor (LGPD) |
 | :--: | :--: |
-| ![Painel de coordenação](docs/img/05-coordenacao-admin.png) | ![Portal do Gestor com trava LGPD](docs/img/06-gestor-lgpd.png) |
+| ![Painel de coordenação](docs/img/05-coordenacao-admin-v2.png) | ![Portal do Gestor com trava LGPD](docs/img/06-gestor-lgpd-v2.png) |
 
 - **Coordenação (`/admin`)** tem quatro abas: visão geral (indicadores, impacto e carteira por médico), classificação de risco, automações (sincronização da planilha e robô de busca ativa, com histórico) e integrações (PostgreSQL, API SOC/S+, WhatsApp).
 - **Gestor/RH (`/gestor`)** vê só **indicadores agregados e anônimos da própria empresa**, com trava **N ≥ 5**: cobertura, assiduidade nas janelas de turno e economia de produção. **Nunca** vê nome, CPF, matrícula, cargo, diagnóstico ou ficha.
