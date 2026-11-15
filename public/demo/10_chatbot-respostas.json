@@ -1,0 +1,28 @@
+{
+  "aviso": "DOCUMENTO FICTÍCIO PARA DEMONSTRAÇÃO DO SECILITA · NÃO CONTÉM DADOS REAIS",
+  "origem": "chatbot-whatsapp",
+  "exportadoEm": "2026-11-14T20:00:00-03:00",
+  "respostas": [
+    {
+      "matricula": "20269012",
+      "nome": "Vagner Alves Brito",
+      "canal": "Chatbot WhatsApp",
+      "recebidoEm": "2026-11-12T08:15:00-03:00",
+      "mensagem": "Confirmo a consulta de quinta, 19/11"
+    },
+    {
+      "matricula": "20269013",
+      "nome": "Priscila Dantas Sales",
+      "canal": "Chatbot WhatsApp",
+      "recebidoEm": "2026-11-13T21:40:00-03:00",
+      "mensagem": "Preciso remarcar, não consigo ir dia 18/11. Pode ser 25/11?"
+    },
+    {
+      "matricula": "20269014",
+      "nome": "Renato Castro Leal",
+      "canal": "Chatbot WhatsApp",
+      "recebidoEm": "2026-11-14T10:00:00-03:00",
+      "status": "Sem resposta após 3 tentativas"
+    }
+  ]
+}
