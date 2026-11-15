@@ -1,20 +1,21 @@
 import React, { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
-  CalendarCheck,
-  Bot,
-  Database,
-  BarChart3,
-  Download,
-  RefreshCw,
-  CheckCircle2,
-  Users,
-  Stethoscope,
   Activity,
-  RotateCcw,
-  Server,
-  BookOpenCheck,
-  Video,
-  Smartphone,
+  BarChart3,
+  Bot,
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  Database,
+  Download,
+  Factory,
+  Info,
+  Loader2,
+  Plug,
+  RefreshCw,
+  Stethoscope,
+  Users,
 } from 'lucide-react';
 import type {
   AutomationLogEntry,
@@ -31,11 +32,23 @@ export interface AdminChannelProps {
   employees: Employee[];
   automationLogs: AutomationLogEntry[];
   dbStatus?: DatabaseConnectionStatus | null;
-  onRunSpreadsheetSync: () => void;
-  onRunActiveSearchBot: () => void;
-  onTestDbConnection: () => void;
+  onRunSpreadsheetSync: () => void | Promise<void>;
+  onRunActiveSearchBot: () => void | Promise<void>;
+  onTestDbConnection: () => void | Promise<void>;
+  /** O reset da demonstração fica na barra superior; mantido por compatibilidade. */
   onResetDemo?: () => void;
 }
+
+type Section = 'BI' | 'AUTOMATIONS' | 'INFRA';
+type RunningAction = 'sync' | 'bot' | 'connectors' | null;
+
+/** Nome legível de cada rotina registrada no histórico. */
+const SCRIPT_LABELS: Record<string, string> = {
+  'syncSesiSpreadsheet.ts': 'Sincronização de agendas e prazos',
+  'activeSearchCron.ts': 'Busca ativa e Passes de Cuidado',
+};
+
+const CARD = 'rounded-2xl border border-[#EAECF0] bg-white shadow-xs';
 
 export const AdminChannel: React.FC<AdminChannelProps> = ({
   employees,
@@ -44,15 +57,31 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
   onRunSpreadsheetSync,
   onRunActiveSearchBot,
   onTestDbConnection,
-  onResetDemo,
 }) => {
-  const [activeSection, setActiveSection] = useState<'BI' | 'AUTOMATIONS' | 'INFRA'>('BI');
+  const [activeSection, setActiveSection] = useState<Section>('BI');
+  const [running, setRunning] = useState<RunningAction>(null);
 
   const analytics = useMemo(() => getPowerBiAnalyticsPayload(employees), [employees]);
   const effectiveDbStatus = useMemo(
     () => dbStatus ?? getDefaultDatabaseStatus(employees.length),
     [dbStatus, employees.length]
   );
+  const census = analytics.spreadsheetCensus;
+  const impact = analytics.healthImpact;
+
+  const lastRunOf = (scriptName: string) =>
+    automationLogs.find((log) => log.scriptName === scriptName);
+
+  const run = async (action: Exclude<RunningAction, null>, fn: () => void | Promise<void>) => {
+    if (running) return;
+    setRunning(action);
+    try {
+      // Garante um retorno visível mesmo quando a resposta é instantânea.
+      await Promise.all([fn(), new Promise((resolve) => setTimeout(resolve, 600))]);
+    } finally {
+      setRunning(null);
+    }
+  };
 
   const handleDownloadUpdatedXlsx = () => {
     const xlsxBytes = buildApsSesiXlsxBytes(employees);
@@ -76,417 +105,579 @@ export const AdminChannel: React.FC<AdminChannelProps> = ({
       maximumFractionDigits: 0,
     });
 
+  const pendingFirstVisitTotal = analytics.doctorPortfolios.reduce(
+    (sum, doc) => sum + doc.pendingFirstVisitCount,
+    0
+  );
+
+  const tabs: { id: Section; label: string; hint: string; icon: ReactNode; badge?: string }[] = [
+    {
+      id: 'BI',
+      label: 'Visão geral',
+      hint: 'Indicadores, impacto e carteira dos médicos',
+      icon: <BarChart3 className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      id: 'AUTOMATIONS',
+      label: 'Automações',
+      hint: 'Sincronizar agendas e rodar a busca ativa',
+      icon: <Bot className="h-4 w-4" aria-hidden="true" />,
+    },
+    {
+      id: 'INFRA',
+      label: 'Integrações',
+      hint: 'Banco de dados e conectores externos',
+      icon: <Plug className="h-4 w-4" aria-hidden="true" />,
+      badge: String(effectiveDbStatus.scalabilityAdapters.length),
+    },
+  ];
+
   return (
     <div className="h-full overflow-y-auto bg-[#E4E8EE] p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto space-y-6 pb-8">
-        {/* Cabeçalho do Painel de Inteligência & Agenda Integrada */}
-        <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="space-y-1">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#0E7A5F] bg-[#ECF8F3] px-2.5 py-0.5 rounded-full border border-[#C7EADC]">
-              Coordenação Regional SESI Saúde Acolhe • Censo de {analytics.spreadsheetCensus.totalRowsInCsv} Trabalhadores
-            </span>
-            <h1 className="text-lg sm:text-xl font-semibold text-[#101828] tracking-tight">
-              Coordenação do Cuidado, Agenda Integrada (S+ / Teams) e Inteligência Epidemiológica
+      <div className="mx-auto max-w-6xl space-y-5 pb-8">
+        {/* Cabeçalho: o que é esta tela e a ação principal */}
+        <header className={`${CARD} flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between`}>
+          <div className="min-w-0 space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#0E7A5F]">
+              Coordenação regional · SESI Saúde Acolhe
+            </p>
+            <h1 className="text-xl font-semibold tracking-tight text-[#101828]">
+              Painel da Coordenação do Cuidado
             </h1>
-            <p className="text-xs text-[#475467]">
-              Atualização automática de prazos clínicos, sincronização com o Sistema de Agendamento SESI (S+) e Agenda Microsoft Teams, e indicadores assistenciais.
+            <p className="text-[12.5px] text-[#475467]">
+              {census.activeWorkersInCsv} vidas ativas em {census.totalRowsInCsv} vínculos ·{' '}
+              {pendingFirstVisitTotal} ainda sem 1ª consulta · atualizado em{' '}
+              {effectiveDbStatus.lastPersistedAt}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={handleDownloadUpdatedXlsx}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0E7A5F] px-4 py-2.5 text-[12.5px] font-semibold text-white shadow-sm hover:bg-[#0B5F4A]"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Baixar planilha atualizada (.xlsx)
+          </button>
+        </header>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleDownloadUpdatedXlsx}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#0E7A5F] text-white hover:bg-[#0B5F4A] transition-colors cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Exportar Relatório de Coordenação (.XLSX)
-            </button>
-            {onResetDemo && (
+        {/* Abas */}
+        <nav
+          role="tablist"
+          aria-label="Seções do painel da coordenação"
+          className={`${CARD} grid grid-cols-1 gap-1 p-1.5 sm:grid-cols-3`}
+        >
+          {tabs.map((tab) => {
+            const active = activeSection === tab.id;
+            return (
               <button
+                key={tab.id}
                 type="button"
-                onClick={onResetDemo}
-                title="Restaurar estado inicial da base assistencial de 100 registros"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-[#F9FAFB] text-[#475467] border border-[#E4E7EC] hover:text-[#101828] hover:bg-[#F2F4F7] transition-colors cursor-pointer"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveSection(tab.id)}
+                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left ${
+                  active
+                    ? 'bg-[#ECF8F3] ring-1 ring-[#C7EADC]'
+                    : 'hover:bg-[#F2F4F7]'
+                }`}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Recarregar Base Assistencial (100 Vidas)
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Navegação enxuta do Canal 2 */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveSection('BI')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSection === 'BI'
-                ? 'bg-[#0E7A5F] text-white shadow-xs'
-                : 'bg-white text-[#475467] border border-[#EAECF0] hover:text-[#101828]'
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            Painel Epidemiológico & Eficiência Operacional APS
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSection('AUTOMATIONS')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSection === 'AUTOMATIONS'
-                ? 'bg-[#0E7A5F] text-white shadow-xs'
-                : 'bg-white text-[#475467] border border-[#EAECF0] hover:text-[#101828]'
-            }`}
-          >
-            <CalendarCheck className="w-3.5 h-3.5" />
-            Integração de Agenda (S+ / Teams) e Busca Ativa
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSection('INFRA')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSection === 'INFRA'
-                ? 'bg-[#0E7A5F] text-white shadow-xs'
-                : 'bg-white text-[#475467] border border-[#EAECF0] hover:text-[#101828]'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5" />
-            Banco de Dados e Conectores (S+, Microsoft Teams & SQL)
-          </button>
-        </div>
-
-        {/* SEÇÃO 1: PAINEL EPIDEMIOLÓGICO & IMPACTO ASSISTENCIAL */}
-        {activeSection === 'BI' && (
-          <div className="space-y-6">
-            {/* Cards Superiores do Censo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs">
-                <div className="flex items-center justify-between text-[#475467] mb-1.5">
-                  <span className="text-xs font-medium">Censo Consolidado SESI</span>
-                  <Users className="w-4 h-4 text-[#0E7A5F]" />
-                </div>
-                <div className="text-2xl font-semibold text-[#101828] tabular-nums">
-                  {analytics.spreadsheetCensus.totalRowsInCsv}{' '}
-                  <span className="text-xs font-normal text-[#475467]">registros</span>
-                </div>
-                <p className="text-[11px] text-[#475467] mt-1">
-                  {analytics.spreadsheetCensus.activeWorkersInCsv} ativos • {analytics.spreadsheetCensus.inactiveWorkersInCsv} inativos catalogados
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs">
-                <div className="flex items-center justify-between text-[#475467] mb-1.5">
-                  <span className="text-xs font-medium">Perfil Demográfico</span>
-                  <Activity className="w-4 h-4 text-[#0E7A5F]" />
-                </div>
-                <div className="text-2xl font-semibold text-[#101828] tabular-nums">
-                  {analytics.spreadsheetCensus.averageAge}{' '}
-                  <span className="text-xs font-normal text-[#475467]">anos (média)</span>
-                </div>
-                <p className="text-[11px] text-[#475467] mt-1">
-                  {analytics.spreadsheetCensus.maleCount} Masculino • {analytics.spreadsheetCensus.femaleCount} Feminino
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs">
-                <div className="flex items-center justify-between text-[#475467] mb-1.5">
-                  <span className="text-xs font-medium">Cuidado Multiprofissional</span>
-                  <Stethoscope className="w-4 h-4 text-[#0E7A5F]" />
-                </div>
-                <div className="text-2xl font-semibold text-[#0E7A5F] tabular-nums">
-                  {analytics.spreadsheetCensus.multiTeamCarePercent}%
-                </div>
-                <p className="text-[11px] text-[#475467] mt-1">
-                  Medicina de Família, Enfermagem, Psicologia e Nutrição
-                </p>
-              </div>
-
-              <div className="bg-[#0E7A5F] text-white rounded-2xl p-5 shadow-xs">
-                <div className="flex items-center justify-between text-[#C7EADC] mb-1.5">
-                  <span className="text-xs font-medium">Horas Produtivas Preservadas</span>
-                  <BookOpenCheck className="w-4 h-4 text-[#C7EADC]" />
-                </div>
-                <div className="text-2xl font-semibold tabular-nums">
-                  {analytics.healthImpact.productiveHoursPreserved}h/ano{' '}
-                  <span className="text-xs font-semibold text-[#C7EADC]">
-                    ({Math.round(analytics.healthImpact.productiveHoursPreserved / 8)} turnos)
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#E3F4EC] mt-1">
-                  {analytics.healthImpact.accompaniedLivesScope} de {analytics.healthImpact.activeLivesScope} vidas ativas acompanhadas na APS
-                </p>
-              </div>
-            </div>
-
-            {/* Indicadores de Eficiência Operacional, Cobertura APS e Produtividade no Turno */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 sm:p-6 shadow-xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F2F4F7] pb-4">
-                <div>
-                  <h2 className="text-sm font-semibold text-[#101828]">
-                    Indicadores de Eficiência da Coordenação do Cuidado & Preservação Produtiva (Baseado nos Dados da Planilha)
-                  </h2>
-                  <p className="text-xs text-[#475467] mt-0.5">
-                    Métricas operacionais extraídas diretamente das 32 colunas da base oficial ({analytics.healthImpact.activeLivesScope} funcionários ativos, {analytics.healthImpact.accompaniedLivesScope} com avaliação de risco e plano de cuidado, e {analytics.healthImpact.recoveredConsultationsCount} agendamentos sincronizados).
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] space-y-1.5">
-                  <div className="text-xs font-semibold text-[#475467]">
-                    1. Horas Produtivas Preservadas nas Janelas de Turno
-                  </div>
-                  <div className="text-xl font-semibold text-[#101828] tabular-nums">
-                    {analytics.healthImpact.productiveHoursPreserved}h/ano{' '}
-                    <span className="text-xs font-semibold text-[#0E7A5F]">
-                      ({formatBrl(analytics.healthImpact.productiveHoursValueBrl)} em produção)
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#475467] leading-relaxed">
-                    Atendimento agendado dentro da janela protegida do 1º e 2º turno via S+ / Teams preserva horas produtivas por consulta em comparação à saída externa sem hora marcada.
-                  </p>
-                  <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#EAECF0]">
-                    <strong>Referência:</strong> {analytics.healthImpact.methodologySources[0]?.officialSource}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] space-y-1.5">
-                  <div className="text-xs font-semibold text-[#475467]">
-                    2. Resolutividade APS (94%) & Desfechos sem Deslocamento Externo
-                  </div>
-                  <div className="text-xl font-semibold text-[#101828] tabular-nums">
-                    {analytics.healthImpact.emergencyVisitsAvoided} encaminhamentos externos evitados
-                  </div>
-                  <p className="text-[11px] text-[#475467] leading-relaxed">
-                    A coordenação longitudinal por Médico de Família, Enfermagem, Nutrição e Psicologia resolve 94% das queixas na própria unidade APS sem necessidade de pronto-socorro.
-                  </p>
-                  <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#EAECF0]">
-                    <strong>Referência:</strong> {analytics.healthImpact.methodologySources[1]?.officialSource}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] space-y-1.5">
-                  <div className="text-xs font-semibold text-[#475467]">
-                    3. Redução de Dias de Absenteísmo por Manejo Ativo (PCI)
-                  </div>
-                  <div className="text-xl font-semibold text-[#101828] tabular-nums">
-                    {analytics.healthImpact.absenteeismDaysAvoided} dias preservados/ano{' '}
-                    <span className="text-xs font-semibold text-[#0E7A5F]">
-                      ({formatBrl(analytics.healthImpact.absenteeismSavingsBrl)} em horas de planta)
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#475467] leading-relaxed">
-                    O monitoramento programado (Risco 4 quinzenal/mensal, Risco 3 trimestral e Risco 2/1 semestral) reduz afastamentos agudos no chão de fábrica.
-                  </p>
-                  <div className="text-[10px] text-[#64748B] pt-1 border-t border-[#EAECF0]">
-                    <strong>Referência:</strong> {analytics.healthImpact.methodologySources[2]?.officialSource}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Carteira por Médico de Referência e Linhas de Cuidado */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#101828]">
-                    Carteira por Médico de Referência (APS SESI)
-                  </h3>
-                  <p className="text-xs text-[#475467]">
-                    Distribuição dos {analytics.spreadsheetCensus.totalRowsInCsv} trabalhadores pelas equipes médicas responsáveis
-                  </p>
-                </div>
-
-                <div className="space-y-2.5">
-                  {analytics.doctorPortfolios.map((doc) => (
-                    <div
-                      key={doc.doctorName}
-                      className="p-3 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs font-semibold text-[#101828]">{doc.doctorName}</div>
-                        <div className="text-[11px] text-[#475467]">
-                          {doc.totalAssignedCsv} no censo ({doc.activeAssigned} ativos • {doc.accompaniedCount} acompanhados)
-                        </div>
-                      </div>
-                      <span className="text-xs font-semibold text-[#0E7A5F] bg-[#ECF8F3] px-2.5 py-1 rounded-lg">
-                        {doc.pendingFirstVisitCount} sem 1ª consulta
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    active ? 'bg-[#0E7A5F] text-white' : 'bg-[#F2F4F7] text-[#475467]'
+                  }`}
+                >
+                  {tab.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`flex items-center gap-2 text-[13px] font-semibold ${
+                      active ? 'text-[#0B4A3B]' : 'text-[#101828]'
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.badge && (
+                      <span
+                        className={`rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums ${
+                          active ? 'bg-white text-[#0E7A5F]' : 'bg-[#EAECF0] text-[#475467]'
+                        }`}
+                      >
+                        {tab.badge}
                       </span>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </span>
+                  <span className="block truncate text-[11px] text-[#475467]">{tab.hint}</span>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* ABA 1: VISÃO GERAL */}
+        {activeSection === 'BI' && (
+          <div role="tabpanel" className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <KpiCard
+                icon={<Users className="h-4 w-4" aria-hidden="true" />}
+                label="Trabalhadores na base"
+                value={String(census.totalRowsInCsv)}
+                detail={`${census.activeWorkersInCsv} ativos · ${census.inactiveWorkersInCsv} inativos`}
+              />
+              <KpiCard
+                icon={<Activity className="h-4 w-4" aria-hidden="true" />}
+                label="Idade média"
+                value={`${census.averageAge}`}
+                unit="anos"
+                detail={`${census.maleCount} homens · ${census.femaleCount} mulheres`}
+              />
+              <KpiCard
+                icon={<Stethoscope className="h-4 w-4" aria-hidden="true" />}
+                label="Com equipe multiprofissional"
+                value={`${census.multiTeamCarePercent}%`}
+                detail="Medicina, Enfermagem, Psicologia e Nutrição"
+                progress={census.multiTeamCarePercent}
+              />
+              <KpiCard
+                highlight
+                icon={<Factory className="h-4 w-4" aria-hidden="true" />}
+                label="Horas de produção preservadas"
+                value={`${impact.productiveHoursPreserved}h`}
+                unit="por ano"
+                detail={`${Math.round(impact.productiveHoursPreserved / 8)} turnos · ${impact.accompaniedLivesScope} de ${impact.activeLivesScope} vidas acompanhadas`}
+              />
+            </div>
+
+            <section className={`${CARD} p-5 sm:p-6`}>
+              <SectionTitle
+                title="Impacto da coordenação do cuidado"
+                subtitle={`Calculado sobre ${impact.activeLivesScope} trabalhadores ativos, ${impact.accompaniedLivesScope} com risco avaliado e ${impact.recoveredConsultationsCount} agendamentos sincronizados.`}
+              />
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                <ImpactCard
+                  label="Horas preservadas no turno"
+                  value={`${impact.productiveHoursPreserved}h/ano`}
+                  money={`${formatBrl(impact.productiveHoursValueBrl)} em produção`}
+                  text="Consultas marcadas na janela protegida do turno evitam a saída externa sem hora marcada."
+                  source={impact.methodologySources[0]?.officialSource}
+                />
+                <ImpactCard
+                  label="Encaminhamentos externos evitados"
+                  value={`${impact.emergencyVisitsAvoided}`}
+                  money="resolutividade APS de 94%"
+                  text="A equipe de referência resolve a maior parte das queixas na própria unidade, sem pronto-socorro."
+                  source={impact.methodologySources[1]?.officialSource}
+                />
+                <ImpactCard
+                  label="Dias de absenteísmo evitados"
+                  value={`${impact.absenteeismDaysAvoided} dias/ano`}
+                  money={`${formatBrl(impact.absenteeismSavingsBrl)} em horas de planta`}
+                  text="Retornos no prazo do protocolo de risco reduzem afastamentos agudos no chão de fábrica."
+                  source={impact.methodologySources[2]?.officialSource}
+                />
               </div>
+            </section>
 
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#101828]">
-                    Prevalência de Linhas de Cuidado APS
-                  </h3>
-                  <p className="text-xs text-[#475467]">
-                    Demandas clínicas consolidadas e resolutividade na Atenção Primária
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <section className={`${CARD} p-5`}>
+                <SectionTitle
+                  title="Carteira por médico de referência"
+                  subtitle="Quantos já estão em acompanhamento e quantos ainda esperam a 1ª consulta"
+                />
+                <ul className="mt-4 space-y-3">
+                  {analytics.doctorPortfolios.map((doc) => {
+                    const pct = doc.activeAssigned
+                      ? Math.round((doc.accompaniedCount / doc.activeAssigned) * 100)
+                      : 0;
+                    return (
+                      <li key={doc.doctorName} className="rounded-xl border border-[#EAECF0] bg-[#F9FAFB] p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-[12.5px] font-semibold text-[#101828]">
+                              {doc.doctorName}
+                            </p>
+                            <p className="text-[11px] text-[#475467]">
+                              {doc.activeAssigned} ativos · {doc.accompaniedCount} em acompanhamento
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] font-semibold ${
+                              doc.pendingFirstVisitCount > 0
+                                ? 'border-[#F5DFB8] bg-[#FDF7EC] text-[#C26D27]'
+                                : 'border-[#C7EADC] bg-[#ECF8F3] text-[#0E7A5F]'
+                            }`}
+                          >
+                            {doc.pendingFirstVisitCount > 0
+                              ? `${doc.pendingFirstVisitCount} sem 1ª consulta`
+                              : 'Todos acolhidos'}
+                          </span>
+                        </div>
+                        <div
+                          className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#EAECF0]"
+                          role="progressbar"
+                          aria-valuenow={pct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`${pct}% da carteira ativa em acompanhamento`}
+                        >
+                          <div className="h-full rounded-full bg-[#0E7A5F]" style={{ width: `${pct}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
 
-                <div className="space-y-2.5">
+              <section className={`${CARD} p-5`}>
+                <SectionTitle
+                  title="Linhas de cuidado mais frequentes"
+                  subtitle="% dos trabalhadores em cada linha e quanto é resolvido na própria APS"
+                />
+                <ul className="mt-4 space-y-3.5">
                   {analytics.careLinesPrevalence.map((item) => (
-                    <div key={item.lineName} className="space-y-1">
-                      <div className="flex justify-between text-xs">
+                    <li key={item.lineName}>
+                      <div className="flex items-baseline justify-between gap-3 text-[12px]">
                         <span className="font-medium text-[#101828]">{item.lineName}</span>
-                        <span className="font-semibold text-[#0E7A5F] tabular-nums">
-                          {item.affectedPercent}% ({item.resolvedInApsPercent}% resolutividade)
+                        <span className="shrink-0 font-semibold tabular-nums text-[#101828]">
+                          {item.affectedPercent}%
                         </span>
                       </div>
-                      <div className="w-full h-2 bg-[#F2F4F7] rounded-full overflow-hidden">
+                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#F2F4F7]">
                         <div
-                          className="h-full bg-[#0E7A5F] rounded-full"
+                          className="h-full rounded-full bg-[#0E7A5F]"
                           style={{ width: `${item.affectedPercent}%` }}
                         />
                       </div>
-                    </div>
+                      <p className="mt-0.5 text-[10.5px] text-[#475467]">
+                        {item.resolvedInApsPercent}% resolvido na APS
+                      </p>
+                    </li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              </section>
             </div>
           </div>
         )}
 
-        {/* SEÇÃO 2: INTEGRAÇÃO DE AGENDA (S+ / TEAMS) E BUSCA ATIVA */}
+        {/* ABA 2: AUTOMAÇÕES */}
         {activeSection === 'AUTOMATIONS' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-4 shadow-xs flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#0E7A5F]">
-                    <Video className="w-4 h-4" />
-                    Sincronização Automática com Sistema de Agendamento (S+) e Agenda Microsoft Teams
-                  </div>
-                  <p className="text-xs text-[#475467] leading-relaxed">
-                    Elimina o controle manual: todas as consultas realizadas, retornos programados conforme o Protocolo de Risco (Risco 4, 3, 2 e 1) e acompanhamentos multiprofissionais são sincronizados automaticamente com o Sistema de Agendamento SESI (S+) e com o calendário do Microsoft Teams da equipe e do colaborador.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onRunSpreadsheetSync}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#0E7A5F] text-white hover:bg-[#0B5F4A] transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Sincronizar Agendas (S+ / Teams) e Prazos Agora
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 space-y-4 shadow-xs flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#0E7A5F]">
-                    <Smartphone className="w-4 h-4" />
-                    Busca Ativa Automatizada e Acesso Rápido do Trabalhador (Teams / WhatsApp)
-                  </div>
-                  <p className="text-xs text-[#475467] leading-relaxed">
-                    Identifica pacientes críticos (Risco 4 e Risco 3 com retorno pendente) e trabalhadores com maior tempo sem agendar a 1ª consulta, enviando link de acesso direto em 1 clique (sem senha) via Microsoft Teams e WhatsApp com horário reservado na janela protegida do turno.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onRunActiveSearchBot}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#101828] text-white hover:bg-[#344054] transition-colors cursor-pointer"
-                >
-                  <Bot className="w-4 h-4" />
-                  Executar Varredura e Enviar Acessos Rápidos
-                </button>
-              </div>
+          <div role="tabpanel" className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ActionCard
+                icon={<CalendarCheck className="h-5 w-5" aria-hidden="true" />}
+                title="Sincronizar agendas e prazos"
+                description="Atualiza a base com a planilha oficial e leva consultas e retornos para o S+ e o Microsoft Teams."
+                steps={[
+                  'Lê a planilha de 32 colunas e separa ativos e inativos',
+                  'Recalcula a próxima consulta pelo protocolo de risco',
+                  'Atualiza as agendas do S+ e do Teams e gera a planilha',
+                ]}
+                lastRun={lastRunOf('syncSesiSpreadsheet.ts')}
+                buttonLabel="Sincronizar agora"
+                runningLabel="Sincronizando…"
+                buttonIcon={<RefreshCw className="h-4 w-4" aria-hidden="true" />}
+                running={running === 'sync'}
+                disabled={running !== null}
+                onRun={() => void run('sync', onRunSpreadsheetSync)}
+              />
+              <ActionCard
+                icon={<Bot className="h-5 w-5" aria-hidden="true" />}
+                title="Rodar busca ativa"
+                description="Encontra quem precisa de contato agora e envia o Passe de Cuidado com horário na janela do turno."
+                steps={[
+                  'Seleciona risco 4 e 3 com retorno pendente',
+                  'Inclui quem está há mais de 140 dias sem a 1ª consulta',
+                  'Envia o link de acesso por WhatsApp/Teams, sem senha',
+                ]}
+                lastRun={lastRunOf('activeSearchCron.ts')}
+                buttonLabel="Rodar busca ativa"
+                runningLabel="Varrendo as filas…"
+                buttonIcon={<Bot className="h-4 w-4" aria-hidden="true" />}
+                running={running === 'bot'}
+                disabled={running !== null}
+                onRun={() => void run('bot', onRunActiveSearchBot)}
+              />
             </div>
 
-            {/* Histórico de Execuções */}
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs space-y-3">
-              <h3 className="text-sm font-semibold text-[#101828]">
-                Registro de Sincronizações de Coordenação do Cuidado e Agendamento
-              </h3>
-              <div className="space-y-2">
-                {automationLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-3.5 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0E7A5F] shrink-0" />
-                        <span className="text-xs font-semibold text-[#101828]">{log.scriptName}</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#ECF8F3] text-[#0E7A5F]">
+            <section className={`${CARD} p-5`}>
+              <SectionTitle
+                title="Histórico de execuções"
+                subtitle="As mais recentes primeiro. As rotinas também rodam sozinhas no horário programado."
+              />
+              {automationLogs.length === 0 ? (
+                <p className="mt-4 rounded-xl border border-dashed border-[#E4E7EC] p-6 text-center text-[12px] text-[#475467]">
+                  Nenhuma execução registrada ainda.
+                </p>
+              ) : (
+                <ol className="mt-4 divide-y divide-[#F2F4F7]">
+                  {automationLogs.map((log) => (
+                    <li key={log.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ECF8F3] text-[#0E7A5F]">
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                          <p className="text-[12.5px] font-semibold text-[#101828]">
+                            {SCRIPT_LABELS[log.scriptName] ?? log.scriptName}
+                            <span className="ml-2 font-mono text-[10.5px] font-normal text-[#98A2B3]">
+                              {log.scriptName}
+                            </span>
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[11px] tabular-nums text-[#475467]">
+                            <Clock className="h-3 w-3" aria-hidden="true" />
+                            {log.executedAt}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[12px] leading-relaxed text-[#475467]">
+                          {log.summaryMessage}
+                        </p>
+                        <p className="mt-1 text-[11px] font-medium text-[#0E7A5F]">
                           {log.rowsUpdatedOrImported} registros atualizados
-                        </span>
+                        </p>
                       </div>
-                      <p className="text-xs text-[#475467] pl-5">{log.summaryMessage}</p>
-                    </div>
-                    <span className="text-[11px] text-[#64748B] tabular-nums pl-5 sm:pl-0 shrink-0">
-                      {log.executedAt}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
           </div>
         )}
 
-        {/* SEÇÃO 3: BANCO DE DADOS E CONECTORES ENTERPRISE */}
+        {/* ABA 3: INTEGRAÇÕES */}
         {activeSection === 'INFRA' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
-                    <Server className="w-4 h-4 text-[#0E7A5F]" />
-                    Persistência Transacional e Conectores de Integração (S+, Microsoft Teams & SQL)
-                  </h3>
-                  <p className="text-xs text-[#475467]">
-                    Motor transacional ativo ({effectiveDbStatus.totalEmployeesPersisted} registros) com conectores para Sistema de Agendamento S+, Microsoft Graph Calendar (Teams) e PostgreSQL 16
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[#0E7A5F] bg-[#ECF8F3] px-3 py-1.5 rounded-lg border border-[#C7EADC]">
-                    Latência: {effectiveDbStatus.latencyMs}ms • Sincronizado às {effectiveDbStatus.lastPersistedAt}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={onTestDbConnection}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0E7A5F] text-white hover:bg-[#0B5F4A] transition-colors cursor-pointer"
-                  >
-                    Verificar Conectores
-                  </button>
-                </div>
+          <div role="tabpanel" className="space-y-5">
+            <section className={`${CARD} p-5`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <SectionTitle
+                  title="Banco de dados e conectores"
+                  subtitle={`${effectiveDbStatus.totalEmployeesPersisted} registros gravados · resposta em ${effectiveDbStatus.latencyMs} ms · última gravação em ${effectiveDbStatus.lastPersistedAt}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => void run('connectors', onTestDbConnection)}
+                  disabled={running !== null}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#0E7A5F] bg-white px-3.5 py-2 text-[12px] font-semibold text-[#0E7A5F] hover:bg-[#ECF8F3] disabled:cursor-wait disabled:opacity-70"
+                >
+                  {running === 'connectors' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {running === 'connectors' ? 'Testando…' : 'Testar conexões'}
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {effectiveDbStatus.scalabilityAdapters.map((adapter) => (
-                  <div
-                    key={adapter.name}
-                    className="p-4 rounded-xl bg-[#F9FAFB] border border-[#EAECF0] flex flex-col justify-between gap-2.5"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-[#101828]">{adapter.name}</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#ECF8F3] text-[#0E7A5F]">
-                          {adapter.status === 'ACTIVE' ? 'ATIVO' : 'PRONTO'}
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                {effectiveDbStatus.scalabilityAdapters.map((adapter) => {
+                  const active = adapter.status === 'ACTIVE';
+                  return (
+                    <article key={adapter.name} className="rounded-xl border border-[#EAECF0] bg-[#F9FAFB] p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#475467] ring-1 ring-[#EAECF0]">
+                            <Database className="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <p className="text-[12.5px] font-semibold text-[#101828]">{adapter.name}</p>
+                        </div>
+                        <span
+                          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${
+                            active ? 'bg-[#ECF8F3] text-[#0E7A5F]' : 'bg-[#EEF2F8] text-[#2F5D9E]'
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-[#0E7A5F]' : 'bg-[#2F5D9E]'}`}
+                          />
+                          {active ? 'Ativo (simulado)' : 'Pronto para ligar'}
                         </span>
                       </div>
-                      <div className="text-[11px] text-[#475467]">{adapter.technology}</div>
-                      <div className="text-[11px] font-mono text-[#0E7A5F] break-all">
+                      <p className="mt-2 text-[11.5px] text-[#475467]">{adapter.technology}</p>
+                      <code className="mt-2 block truncate rounded-md bg-white px-2 py-1 font-mono text-[10.5px] text-[#344054] ring-1 ring-[#EAECF0]" title={adapter.endpointPreview}>
                         {adapter.endpointPreview}
-                      </div>
-                    </div>
-                    <div className="text-[11px] text-[#64748B] pt-2 border-t border-[#EAECF0]">
-                      Capacidade: {adapter.capacityTarget}
-                    </div>
-                  </div>
-                ))}
+                      </code>
+                      <p className="mt-2 text-[11px] text-[#475467]">
+                        <span className="font-medium text-[#344054]">Para que serve:</span>{' '}
+                        {adapter.capacityTarget}
+                      </p>
+                    </article>
+                  );
+                })}
               </div>
-            </div>
+
+              <p className="mt-4 flex items-start gap-2 rounded-xl bg-[#F2F4F7] px-3 py-2.5 text-[11.5px] text-[#475467]">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                Na demonstração os conectores são simulados e os dados ficam num banco local. O
+                esquema para produção (PostgreSQL 16, com a trava LGPD N ≥ 5) está em{' '}
+                <code className="font-mono">server/schema.sql</code>.
+              </p>
+            </section>
           </div>
         )}
       </div>
     </div>
   );
 };
+
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="min-w-0">
+      <h2 className="text-[14px] font-semibold tracking-tight text-[#101828]">{title}</h2>
+      {subtitle && <p className="mt-0.5 text-[12px] text-[#475467]">{subtitle}</p>}
+    </div>
+  );
+}
+
+interface KpiCardProps {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  unit?: string;
+  detail: string;
+  progress?: number;
+  highlight?: boolean;
+}
+
+function KpiCard({ icon, label, value, unit, detail, progress, highlight }: KpiCardProps) {
+  return (
+    <div
+      className={`rounded-2xl p-5 shadow-xs ${
+        highlight ? 'bg-[#0E7A5F] text-white' : 'border border-[#EAECF0] bg-white'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+            highlight ? 'bg-white/15 text-white' : 'bg-[#ECF8F3] text-[#0E7A5F]'
+          }`}
+        >
+          {icon}
+        </span>
+        <span className={`text-[12px] font-medium ${highlight ? 'text-[#D5EDE2]' : 'text-[#475467]'}`}>
+          {label}
+        </span>
+      </div>
+      <p
+        className={`mt-3 text-[26px] font-semibold leading-none tracking-tight tabular-nums ${
+          highlight ? 'text-white' : 'text-[#101828]'
+        }`}
+      >
+        {value}
+        {unit && (
+          <span className={`ml-1 text-[12px] font-normal ${highlight ? 'text-[#D5EDE2]' : 'text-[#475467]'}`}>
+            {unit}
+          </span>
+        )}
+      </p>
+      {progress !== undefined && (
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#EAECF0]">
+          <div className="h-full rounded-full bg-[#0E7A5F]" style={{ width: `${progress}%` }} />
+        </div>
+      )}
+      <p className={`mt-2 text-[11.5px] ${highlight ? 'text-[#E3F4EC]' : 'text-[#475467]'}`}>{detail}</p>
+    </div>
+  );
+}
+
+interface ImpactCardProps {
+  label: string;
+  value: string;
+  money: string;
+  text: string;
+  source?: string;
+}
+
+function ImpactCard({ label, value, money, text, source }: ImpactCardProps) {
+  return (
+    <div className="flex flex-col rounded-xl border border-[#EAECF0] bg-[#F9FAFB] p-4">
+      <p className="text-[12px] font-medium text-[#475467]">{label}</p>
+      <p className="mt-1.5 text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-[#101828]">
+        {value}
+      </p>
+      <p className="text-[12px] font-semibold text-[#0E7A5F]">{money}</p>
+      <p className="mt-2 flex-1 text-[11.5px] leading-relaxed text-[#475467]">{text}</p>
+      {source && (
+        <p className="mt-3 border-t border-[#EAECF0] pt-2 text-[10.5px] text-[#64748B]">
+          Fonte: {source}
+        </p>
+      )}
+    </div>
+  );
+}
+
+interface ActionCardProps {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  steps: string[];
+  lastRun?: AutomationLogEntry;
+  buttonLabel: string;
+  runningLabel: string;
+  buttonIcon: ReactNode;
+  running: boolean;
+  disabled: boolean;
+  onRun: () => void;
+}
+
+function ActionCard({
+  icon,
+  title,
+  description,
+  steps,
+  lastRun,
+  buttonLabel,
+  runningLabel,
+  buttonIcon,
+  running,
+  disabled,
+  onRun,
+}: ActionCardProps) {
+  return (
+    <section className={`${CARD} flex flex-col p-5`}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ECF8F3] text-[#0E7A5F]">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[14px] font-semibold tracking-tight text-[#101828]">{title}</h2>
+          <p className="mt-0.5 text-[12px] leading-relaxed text-[#475467]">{description}</p>
+        </div>
+      </div>
+
+      <ol className="mt-4 space-y-1.5">
+        {steps.map((step, idx) => (
+          <li key={step} className="flex items-start gap-2 text-[12px] text-[#344054]">
+            <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#F2F4F7] text-[10px] font-semibold text-[#475467]">
+              {idx + 1}
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-4 flex-1" />
+
+      <p className="mb-3 flex items-center gap-1.5 text-[11.5px] text-[#475467]">
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+        {lastRun ? (
+          <>
+            Última execução: <span className="font-medium text-[#344054]">{lastRun.executedAt}</span>
+            <span className="text-[#98A2B3]">·</span>
+            {lastRun.rowsUpdatedOrImported} registros
+          </>
+        ) : (
+          'Ainda não executada'
+        )}
+      </p>
+
+      <button
+        type="button"
+        onClick={onRun}
+        disabled={disabled}
+        aria-busy={running}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E7A5F] px-4 py-2.5 text-[12.5px] font-semibold text-white shadow-sm hover:bg-[#0B5F4A] disabled:cursor-wait disabled:opacity-70"
+      >
+        {running ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : buttonIcon}
+        {running ? runningLabel : buttonLabel}
+      </button>
+    </section>
+  );
+}
 
 export default AdminChannel;

@@ -139,11 +139,11 @@ export function TopBar({
           <button
             type="button"
             onClick={onResetDemo}
-            title="Recarregar censo padrão de 100 registros"
+            title="Desfaz as alterações e volta aos 100 registros iniciais da demonstração"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] px-3 py-1.5 text-[11.5px] font-semibold text-[#101828] transition-colors hover:border-[#0E7A5F] hover:bg-[#ECF8F3] hover:text-[#0E7A5F]"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Recarregar Base</span>
+            <span>Restaurar demo</span>
           </button>
         )}
 

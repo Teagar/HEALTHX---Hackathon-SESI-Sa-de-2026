@@ -360,7 +360,7 @@ export function App() {
   };
 
   const handleRunSpreadsheetSync = () => {
-    void (async () => {
+    return (async () => {
       if (backendOnline) {
         const payload = await apiRequest<AutomationApiPayload>(
           '/api/automations/sync-spreadsheet',
@@ -444,7 +444,7 @@ export function App() {
   };
 
   const handleRunActiveSearchBot = () => {
-    void (async () => {
+    return (async () => {
       if (backendOnline) {
         const payload = await apiRequest<AutomationApiPayload>(
           '/api/automations/run-active-search-bot',
@@ -525,7 +525,7 @@ export function App() {
   };
 
   const handleTestDbConnection = () => {
-    void (async () => {
+    return (async () => {
       if (backendOnline) {
         const payload = await apiRequest<TestConnectionPayload>(
           '/api/admin/test-connection',
