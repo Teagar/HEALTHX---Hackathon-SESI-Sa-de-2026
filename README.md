@@ -6,6 +6,8 @@
 
 Hackathon SESI Saúde 2026 · Atenção Primária à Saúde (APS) corporativa
 
+[![2º lugar no Hackathon+ SESI Saúde 2026](https://img.shields.io/badge/%F0%9F%A5%88%202%C2%BA%20lugar-Hackathon%2B%20SESI%20Sa%C3%BAde%202026-0E7A5F?style=for-the-badge)](https://github.com/Teagar/HEALTHX---Hackathon-SESI-Sa-de-2026/releases/tag/hackathon-2026-2o-lugar)
+
 [Demo online](https://sesilita.teagar.com.br) · [Como rodar](#como-rodar) · [Arquitetura](#arquitetura)
 
 ![Portal de acesso do SESILITA](docs/img/01-portal-v2.png)
